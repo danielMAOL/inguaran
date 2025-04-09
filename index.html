@@ -23,7 +23,7 @@
   <body>
     <div id="ar-container">
       <a-scene
-        mindar-image="imageTargetSrc: ./assets/paleterianeveria.mind;"
+        mindar-image="imageTargetSrc: ./assets/paleterianeveria.mind"
         color-space="sRGB"
         embedded
         renderer="colorManagement: true, logarithmicDepthBuffer: true"
@@ -31,14 +31,11 @@
         device-orientation-permission-ui="enabled: true"
       >
         <a-assets>
-          <!-- Modelo 3D animado -->
           <a-asset-item id="modelo" src="./assets/Capoeira.glb"></a-asset-item>
         </a-assets>
 
-        <!-- Cámara -->
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- Modelo + texto -->
         <a-entity mindar-image-target="targetIndex: 0">
           <a-gltf-model
             src="#modelo"
@@ -59,3 +56,4 @@
     </div>
   </body>
 </html>
+
