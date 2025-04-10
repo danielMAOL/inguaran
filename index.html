@@ -19,28 +19,22 @@
   <body>
     <a-scene mindar-image="imageTargetSrc: ./assets/paleterianeveria.mind; autoStart: true; uiLoading: yes; uiError: yes;" embedded color-space="sRGB" renderer="precision: mediump; antialias: true">
       <a-assets>
-        <a-asset-item id="font" src="https://cdn.aframe.io/fonts/mozillavr.fnt"></a-asset-item>
+        <!-- Puedes agregar aquí imágenes, modelos u otros recursos si los necesitas -->
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-entity position="0 0 0">
-          <a-text 
-            value="Desde 1950\ncreando dulces historias"
-            position="0 0 0"
-            rotation="0 0 0"
-            scale="1.2 1.2 1.2"
-            color="#ff69b4"
-            align="center"
-            side="double"
-            font="#font"
-            shader="msdf"
-            negate="false"
-            animation="property: scale; dir: alternate; dur: 1000; loop: true; to: 1.4 1.4 1.4"
-            animation__color="property: color; dir: alternate; dur: 1500; loop: true; to: #fff">
-          </a-text>
-        </a-entity>
+        <a-text 
+          value="Desde 1950\ncreando dulces historias"
+          position="0 0 0"
+          rotation="0 0 0"
+          scale="0.5 0.5 0.5"
+          color="#FFC107"
+          align="center"
+          side="double"
+          font="https://cdn.aframe.io/fonts/mozillavr.fnt">
+        </a-text>
       </a-entity>
     </a-scene>
   </body>
