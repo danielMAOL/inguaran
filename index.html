@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Paletería AR</title>
 
-  <!-- A-Frame y MindAR -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
 
@@ -15,21 +14,21 @@
       padding: 0;
       height: 100%;
       overflow: hidden;
-      background-color: black;
+      background: black;
     }
     a-scene {
-      position: absolute;
-      top: 0;
-      left: 0;
       width: 100vw;
       height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
     }
     #loading-message {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0,0,0,0.8);
       color: white;
       padding: 20px;
       border-radius: 10px;
@@ -39,32 +38,35 @@
   </style>
 </head>
 <body>
+
   <div id="loading-message">Cargando experiencia AR...</div>
 
   <a-scene
     mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true;"
-    vr-mode-ui="enabled: false"
-    loading-screen="enabled: false"
     embedded
-    renderer="colorManagement: true;"
+    color-space="sRGB"
+    renderer="colorManagement: true; logarithmicDepthBuffer: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: true"
   >
     <a-assets>
-      <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
+      <a-asset-item id="modelo" src="assets/Capoeira.glb"></a-asset-item>
     </a-assets>
 
-    <a-entity light="type: ambient; intensity: 1"></a-entity>
-    <a-entity light="type: directional; intensity: 1" position="1 1 1"></a-entity>
+    <!-- luces para que se vea -->
+    <a-entity light="type: ambient; intensity: 1.2"></a-entity>
+    <a-entity light="type: directional; intensity: 0.8" position="1 1 1"></a-entity>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
       <a-gltf-model
-        src="#model"
+        src="#modelo"
         position="0 -0.3 0"
         scale="0.5 0.5 0.5"
-        rotation="0 180 0"
-        animation-mixer
+        rotation="0 0 0"
       ></a-gltf-model>
+
       <a-text
         value="Desde 1950 creando dulces historias"
         align="center"
@@ -76,14 +78,13 @@
   </a-scene>
 
   <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const scene = document.querySelector('a-scene');
-      const loading = document.getElementById('loading-message');
-      scene.addEventListener('loaded', () => {
-        if (loading) loading.style.display = 'none';
-      });
+    const scene = document.querySelector("a-scene");
+    const loading = document.getElementById("loading-message");
+    scene.addEventListener("loaded", () => {
+      loading.style.display = "none";
     });
   </script>
+
 </body>
 </html>
 
