@@ -2,65 +2,142 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Paletería AR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Paletería Inguarán AR</title>
+
+  <!-- Librerías -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+
   <style>
-    body { margin: 0; overflow: hidden; }
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
     #loading-message {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0,0,0,0.8);
       color: white;
       padding: 20px;
       border-radius: 10px;
       text-align: center;
-      z-index: 1000;
+      z-index: 9999;
+      font-family: 'Arial Black', sans-serif;
+    }
+    a-scene {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
     }
   </style>
 </head>
 <body>
-  <div id="loading-message">Cargando experiencia AR...</div>
+
+  <div id="loading-message">Buscando marcador de Paletería Inguarán...</div>
 
   <a-scene
-    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true;"
+    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
     vr-mode-ui="enabled: false"
-    loading-screen="enabled: false"
-    embedded
-    renderer="colorManagement: true;"
+    device-orientation-permission-ui="enabled: false"
+    renderer="colorManagement: true; antialias: true;"
   >
     <a-assets>
-      <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
+      <!-- Fuente cool para el texto 3D -->
+      <a-asset-item id="exoFont" src="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-asset-item>
     </a-assets>
 
-    <!-- Luces para que se vea bien -->
-    <a-entity light="type: ambient; intensity: 1"></a-entity>
-    <a-entity light="type: directional; intensity: 1" position="1 1 1"></a-entity>
-
-    <!-- Cámara -->
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Modelo sobre el marcador -->
     <a-entity mindar-image-target="targetIndex: 0">
-      <a-gltf-model
-        id="model-entity"
-        src="#model"
-        position="0 -0.3 0"
-        scale="0.6 0.6 0.6"
-        rotation="0 0 0"
-        animation-mixer
-      ></a-gltf-model>
+      <!-- Texto principal con efecto 3D -->
+      <a-text
+        value="PALETERÍA Y NEVERÍA INGUARÁN"
+        position="0 0.5 0"
+        align="center"
+        color="#FF0066"
+        width="6"
+        font="#exoFont"
+        shader="msdf"
+        anchor="center"
+        wrap-count="20"
+        letter-spacing="2"
+        geometry="primitive: plane; height: auto; width: auto"
+        material="side: double; transparent: true; opacity: 1"
+      >
+        <a-entity
+          position="0 0 -0.05"
+          text="value: PALETERÍA Y NEVERÍA INGUARÁN; color: #990033; width: 6; font: #exoFont; align: center"
+          geometry="primitive: plane; height: auto; width: auto"
+          material="side: double; transparent: true; opacity: 0.8"
+        ></a-entity>
+      </a-text>
+
+      <!-- Texto secundario -->
+      <a-text
+        value="CREANDO HISTORIAS DESDE 1950"
+        position="0 -0.2 0"
+        align="center"
+        color="#00CCFF"
+        width="4"
+        font="#exoFont"
+        shader="msdf"
+        anchor="center"
+        wrap-count="25"
+        letter-spacing="1"
+      ></a-text>
+
+      <!-- Efecto de brillo opcional -->
+      <a-light type="point" intensity="0.8" color="#FF0066" position="0 1 1"></a-light>
+      <a-light type="point" intensity="0.5" color="#00CCFF" position="0 -0.5 1"></a-light>
     </a-entity>
   </a-scene>
 
   <script>
-    document.querySelector('a-scene').addEventListener('loaded', () => {
-      document.getElementById('loading-message').style.display = 'none';
+    document.addEventListener('DOMContentLoaded', () => {
+      const loading = document.getElementById('loading-message');
+      const scene = document.querySelector('a-scene');
+      
+      // Verificar compatibilidad
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        loading.textContent = 'Tu navegador no soporta AR. Prueba con Chrome en un móvil.';
+        return;
+      }
+      
+      // Cuando la escena esté lista
+      scene.addEventListener('loaded', () => {
+        setTimeout(() => {
+          loading.style.display = 'none';
+          
+          // Efecto de aparición del texto
+          const texts = document.querySelectorAll('a-text');
+          texts.forEach(text => {
+            text.setAttribute('scale', '0 0 0');
+            text.setAttribute('animation', {
+              property: 'scale',
+              to: '1 1 1',
+              dur: 1000,
+              easing: 'easeOutElastic'
+            });
+          });
+        }, 1500);
+      });
+      
+      // Manejo de errores
+      scene.addEventListener('error', () => {
+        loading.textContent = 'Error al acceder a la cámara. Permite el acceso e intenta nuevamente.';
+      });
     });
   </script>
 </body>
 </html>
-
