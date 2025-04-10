@@ -4,18 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Paletería Nevería - Realidad Aumentada</title>
-
-    <!-- Cargar las librerías MindAR y Three.js -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.133.0/build/three.min.js"></script>
-
+    
+    <!-- Librerías MindAR -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    
     <style>
-        html, body {
-            position: relative;
+        body {
             margin: 0;
-            width: 100%;
-            height: 100%;
             overflow: hidden;
         }
         #loading {
@@ -29,91 +25,109 @@
             align-items: center;
             background-color: rgba(0, 0, 0, 0.5);
             color: white;
-            z-index: 1000;
+            z-index: 9999;
             font-family: Arial, sans-serif;
+            font-size: 1.5em;
+        }
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <div id="loading">Cargando, por favor espere...</div>
-
+    <!-- Pantalla de carga -->
+    <div id="loading">Cargando experiencia AR...</div>
+    
+    <!-- Escena A-Frame con MindAR -->
+    <a-scene 
+        mindar-image="imageTargetSrc: ./assets/paleterianeveria.mind; showStats: false; uiScanning: #scanning-overlay;"
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights: true" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false"
+        embedded>
+        
+        <!-- Cámara -->
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        
+        <!-- Target del marcador -->
+        <a-entity mindar-image-target="targetIndex: 0">
+            <!-- Texto principal 3D -->
+            <a-entity
+                text="value: desde 1950; color: #FF5500; align: center; width: 2; font: exo2bold;"
+                position="0 0.1 0"
+                rotation="-90 0 0">
+            </a-entity>
+            
+            <a-entity
+                text="value: creando dulces historias; color: #FF5500; align: center; width: 1.5; font: exo2bold;"
+                position="0 -0.1 0"
+                rotation="-90 0 0">
+            </a-entity>
+            
+            <!-- Efectos visuales adicionales -->
+            <a-box 
+                color="#FF5500" 
+                opacity="0.7" 
+                depth="0.01" 
+                height="0.05" 
+                width="1.5" 
+                position="0 -0.05 -0.1" 
+                rotation="-90 0 0"
+                animation="property: rotation; to: -90 360 0; dur: 10000; easing: linear; loop: true">
+            </a-box>
+            
+            <!-- Fondo del texto -->
+            <a-plane
+                color="#FFFFFF"
+                opacity="0.5"
+                width="1.8"
+                height="0.7"
+                position="0 -0.02 0"
+                rotation="-90 0 0">
+            </a-plane>
+        </a-entity>
+    </a-scene>
+    
+    <!-- Overlay para escaneo -->
+    <div id="scanning-overlay" style="display: flex; align-items: center; justify-content: center; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 2;">
+        <div style="text-align: center; color: white; font-family: Arial, sans-serif;">
+            <div style="font-size: 1.25em; margin-bottom: 10px;">Busca el marcador con la cámara</div>
+            <img src="https://cdn.glitch.com/97575516-8a91-4e34-1695-b7aae8fbd199%2Fscanning.gif?v=1620508470929" style="width: 100%; max-width: 200px;">
+        </div>
+    </div>
+    
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const start = async () => {
-                // Inicializar MindAR
-                const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-                    container: document.body,
-                    imageTargetSrc: "./assets/paleterianeveria.mind",
-                });
-
-                const { renderer, scene, camera } = mindarThree;
-
-                // Crear un anchor para el marcador
-                const anchor = mindarThree.addAnchor(0);
-
-                // Cargar fuente para el texto 3D
-                const loader = new THREE.FontLoader();
-
-                loader.load(
-                    "https://cdn.jsdelivr.net/npm/three@0.133.0/examples/fonts/helvetiker_bold.typeface.json",
-                    function(font) {
-                        const material = new THREE.MeshStandardMaterial({
-                            color: 0xff5500,
-                            metalness: 0.3,
-                            roughness: 0.4
-                        });
-
-                        const group = new THREE.Group();
-
-                        const createText = (text, yOffset) => {
-                            const geometry = new THREE.TextGeometry(text, {
-                                font: font,
-                                size: 0.1,
-                                height: 0.02,
-                                bevelEnabled: true,
-                                bevelThickness: 0.005,
-                                bevelSize: 0.002,
-                                bevelSegments: 3
-                            });
-                            geometry.computeBoundingBox();
-                            const xOffset = (geometry.boundingBox.max.x - geometry.boundingBox.min.x) / 2;
-                            geometry.translate(-xOffset, 0, 0);
-
-                            const mesh = new THREE.Mesh(geometry, material);
-                            mesh.position.set(0, yOffset, 0);
-                            group.add(mesh);
-                        };
-
-                        createText("Desde 1950", 0.15);
-                        createText("creando", 0);
-                        createText("dulces historias", -0.15);
-
-                        group.rotation.x = -Math.PI / 2;
-
-                        // Luces
-                        const light = new THREE.DirectionalLight(0xffffff, 1.0);
-                        light.position.set(0, 0, 1);
-                        anchor.group.add(light);
-
-                        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-                        anchor.group.add(ambientLight);
-
-                        anchor.group.add(group);
-                        console.log("Texto 3D añadido al marcador");
-                    }
-                );
-
-                // Iniciar la experiencia AR
-                await mindarThree.start();
-
-                document.getElementById("loading").style.display = "none";
-
-                renderer.setAnimationLoop(() => {
-                    renderer.render(scene, camera);
-                });
-            };
-
-            start();
+        // Control de la interfaz de usuario
+        document.addEventListener('DOMContentLoaded', function () {
+            const sceneEl = document.querySelector('a-scene');
+            const loadingScreen = document.querySelector('#loading');
+            const scanningOverlay = document.querySelector('#scanning-overlay');
+            
+            // Ocultar pantalla de carga cuando la escena A-Frame esté lista
+            sceneEl.addEventListener('loaded', function () {
+                console.log('A-Frame cargado');
+                loadingScreen.classList.add('hidden');
+            });
+            
+            // Manejo de eventos de target encontrado/perdido
+            const target = document.querySelector('a-entity[mindar-image-target]');
+            
+            target.addEventListener('targetFound', function () {
+                console.log('Marcador encontrado');
+                scanningOverlay.classList.add('hidden');
+            });
+            
+            target.addEventListener('targetLost', function () {
+                console.log('Marcador perdido');
+                scanningOverlay.classList.remove('hidden');
+            });
+            
+            // Manejo de errores
+            sceneEl.addEventListener('arError', function (event) {
+                console.error('Error AR:', event.detail);
+                loadingScreen.innerHTML = 'Error al iniciar AR. Verifica que tu navegador tenga acceso a la cámara y soporte WebXR.';
+            });
         });
     </script>
 </body>
