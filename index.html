@@ -2,67 +2,110 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Paletería Nevería - Realidad Aumentada</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://rawgit.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
-    <script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AR Paleteria Neveria</title>
+
+    <!-- Importar A-Frame -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <!-- Importar MindAR para A-Frame (Image Tracking) -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
     <style>
-        html, body {
+        /* Estilos básicos para ocultar elementos mientras carga y mejorar la visualización */
+        body {
             margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+            overflow: hidden; /* Evita barras de scroll */
+        }
+        /* Opcional: Ocultar el canvas hasta que MindAR esté listo */
+        .a-scene {
+            display: none;
+        }
+        /* Estilos para los indicadores UI de MindAR (puedes personalizarlos) */
+        .mindar-ui-overlay.ready .mindar-ui-scanning {
+             border: 10px solid #ffffff !important; /* Borde blanco al escanear */
+        }
+        .mindar-ui-overlay.scanning .mindar-ui-scanning .inner .scanline {
+            background: linear-gradient(to bottom, transparent 0%, #fff 50%, transparent 100%) !important; /* Línea de escaneo blanca */
         }
     </style>
+
 </head>
-<body style='margin: 0; overflow: hidden;'>
-    <a-scene embedded arjs='sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;' renderer="antialias: true; alpha: true">
+<body>
+    <!-- Escena de A-Frame configurada para MindAR Image Tracking -->
+    <a-scene
+        mindar-image="
+            imageTargetSrc: assets/paleterianeveria.mind;
+            maxTrack: 1;
+            uiLoading: yes;
+            uiScanning: yes;
+            uiError: yes;
+        "
+        color-space="sRGB"
+        renderer="colorManagement: true, physicallyCorrectLights"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false"
+        embedded>
 
-        <!-- Marcador personalizado -->
-        <a-marker type='pattern' url='assets/paleterianeveria.mind' smooth="true" smoothCount="10" smoothTolerance="0.01">
-            
-            <!-- Texto 3D con animaciones y orientado al usuario -->
-            <a-entity position="0 1 0" look-at="[camera]">
-                <a-text value="Desde 1950" 
-                        color="#FF3366"
-                        position="0 0.5 0"
-                        scale="2 2 2"
-                        geometry="primitive: plane; width: auto; height: auto"
-                        material="side: double; transparent: true; opacity: 0.9"
-                        animation="property: position; dir: alternate; dur: 1500; loop: true; to: 0 0.6 0">
-                </a-text>
-                
-                <a-text value="creando" 
-                        color="#33CCFF"
-                        position="0 0 0"
-                        scale="2 2 2"
-                        geometry="primitive: plane; width: auto; height: auto"
-                        material="side: double; transparent: true; opacity: 0.9"
-                        animation="property: scale; dir: alternate; dur: 1000; loop: true; to: 2.2 2.2 2.2">
-                </a-text>
-                
-                <a-text value="dulces historias" 
-                        color="#FFCC33"
-                        position="0 -0.5 0"
-                        scale="2 2 2"
-                        geometry="primitive: plane; width: auto; height: auto"
-                        material="side: double; transparent: true; opacity: 0.9"
-                        animation="property: rotation; to: 0 0 10; dur: 2000; dir: alternate; loop: true">
-                </a-text>
-            </a-entity>
+        <!--
+            Assets Management System (opcional pero bueno para pre-cargar).
+            Aquí podrías poner fuentes personalizadas si quisieras.
+        <a-assets>
+             <a-asset-item id="customFont" src="path/to/your/font.json"></a-asset-item>
+             <a-asset-item id="customFontTexture" src="path/to/your/fontTexture.png"></a-asset-item>
+        </a-assets>
+        -->
 
-            <!-- Efectos adicionales -->
-            <a-entity position="0 0.5 0">
-                <a-circle radius="1.5" segments="64" color="#FFFFFF" opacity="0.2" position="0 -0.5 0"></a-circle>
-                <a-circle radius="1" segments="64" color="#FFFFFF" opacity="0.3" position="0 -0.5 0.1"></a-circle>
-            </a-entity>
-        </a-marker>
+        <!-- Cámara - MindAR la controla, pero es necesaria en la escena -->
+        <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="far: ${customFields.libVersion}; objects: .clickable"></a-camera>
 
-        <!-- Cámara -->
-        <a-entity camera></a-entity>
+        <!-- Entidad que representa el marcador de imagen (targetIndex="0" es el primero en tu .mind) -->
+        <a-entity mindar-image-target="targetIndex: 0">
+
+            <!-- Texto 3D que aparecerá sobre el marcador -->
+            <a-text
+                value="desde 1950 creando dulces historias"
+                color="#FFD700" /* Un color dorado/amarillo */
+                align="center"
+                anchor="center"
+                baseline="center"
+                width="2"        /* Ancho máximo antes de saltar línea (ajusta según necesites) */
+                wrap-count="30"  /* Caracteres aproximados por línea */
+                position="0 0.1 0" /* Posición relativa al marcador (X Y Z). Y=0.1 lo pone un poco arriba */
+                scale="0.3 0.3 0.3"> /* Escala del texto (ajusta el tamaño) */
+                <!-- Si usaras una fuente personalizada:
+                font="customFont"
+                font-image="customFontTexture"
+                negate="false"
+                -->
+            </a-text>
+
+            <!-- Opcional: Puedes añadir otros elementos 3D aquí si quieres -->
+            <!-- Ejemplo: Un plano simple debajo del texto
+            <a-plane color="#CCC" height="0.5" width="2.5" position="0 0 -0.01" rotation="-90 0 0"></a-plane>
+            -->
+
+        </a-entity>
     </a-scene>
+
+    <script>
+        // Pequeño script para mostrar la escena una vez que MindAR esté listo (mejora la carga visual)
+        document.addEventListener('DOMContentLoaded', () => {
+            const sceneEl = document.querySelector('a-scene');
+            sceneEl.addEventListener('renderstart', () => {
+                // Mostrar la escena cuando el renderizado comience
+                sceneEl.style.display = 'block';
+            });
+            // Opcional: Manejar evento si el target se encuentra/pierde
+            const targetEntity = document.querySelector('[mindar-image-target]');
+            targetEntity.addEventListener("targetFound", event => {
+              console.log("Target encontrado!");
+              // Puedes hacer algo cuando se encuentra, como iniciar una animación
+            });
+            targetEntity.addEventListener("targetLost", event => {
+              console.log("Target perdido!");
+              // Puedes hacer algo cuando se pierde
+            });
+        });
+    </script>
 </body>
 </html>
-
-
