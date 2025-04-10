@@ -2,118 +2,152 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Paletería AR</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; }
-        #start-screen {
-            position: fixed; top: 0; left: 0; 
+        body { margin: 0; overflow: hidden; }
+        #ui-container {
+            position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            background: #111; color: white; z-index: 1000;
-            text-align: center; padding: 20px;
+            background: rgba(0,0,0,0.8); color: white;
+            z-index: 1000; text-align: center;
+            font-family: Arial, sans-serif;
         }
         button {
-            background: #e94560; color: white;
+            background: #FF5733; color: white;
             border: none; padding: 15px 30px;
-            margin-top: 20px; font-size: 16px;
-            border-radius: 5px; cursor: pointer;
+            margin: 10px; border-radius: 5px;
+            font-size: 16px; cursor: pointer;
         }
         .hidden { display: none; }
+        #status { margin-top: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
-    <div id="start-screen">
-        <h2>Experiencia AR Paletería</h2>
-        <p>Por favor, permite el acceso a tu cámara cuando te lo solicite</p>
-        <button id="start-btn">INICIAR EXPERIENCIA AR</button>
+    <div id="ui-container">
+        <h2>PALETERÍA AR</h2>
+        <p>Experiencia de Realidad Aumentada</p>
+        <button id="start-btn">INICIAR CÁMARA</button>
+        <div id="status">Esperando activación...</div>
     </div>
 
-    <a-scene id="ar-scene" mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: false;" 
-             vr-mode-ui="enabled: false" loading-screen="enabled: false">
+    <!-- Escena A-Frame - Simplificada para depuración -->
+    <a-scene id="ar-scene" 
+             mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: false;"
+             vr-mode-ui="enabled: false" 
+             loading-screen="enabled: false"
+             renderer="colorManagement: true;"
+             embedded>
+             
         <a-assets>
             <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
         </a-assets>
+        
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        
         <a-entity mindar-image-target="targetIndex: 0">
             <a-gltf-model src="#model" position="0 0 0" scale="0.3 0.3 0.3" rotation="0 180 0"></a-gltf-model>
         </a-entity>
     </a-scene>
 
     <script>
+        // Elementos UI
+        const uiContainer = document.getElementById('ui-container');
         const startBtn = document.getElementById('start-btn');
-        const startScreen = document.getElementById('start-screen');
+        const statusEl = document.getElementById('status');
         
-        // Verificar compatibilidad
-        function checkARSupport() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert("Tu navegador no soporta acceso a la cámara. Prueba con Chrome o Safari.");
-                return false;
-            }
-            return true;
+        // Variables de estado
+        let arStarted = false;
+        
+        // Verificar compatibilidad básica
+        function checkCompatibility() {
+            const checks = {
+                'MediaDevices API': !!navigator.mediaDevices,
+                'getUserMedia': !!navigator.mediaDevices?.getUserMedia,
+                'WebGL': !!document.createElement('canvas').getContext('webgl'),
+                'A-Frame': !!window.AFRAME,
+                'MindAR': !!AFRAME?.components['mindar-image-system']
+            };
+            
+            console.log("Compatibilidad:", checks);
+            statusEl.innerHTML += "<br>Compatibilidad verificada";
+            
+            return Object.values(checks).every(Boolean);
         }
         
-        // Iniciar AR
+        // Iniciar AR con manejo robusto de errores
         async function startAR() {
-            if (!checkARSupport()) return;
+            if (arStarted) return;
+            
+            if (!checkCompatibility()) {
+                statusEl.innerHTML = "ERROR: Tu dispositivo/navegador no es compatible";
+                return;
+            }
             
             try {
-                // 1. Primero solicitar permiso explícito
-                const stream = await navigator.mediaDevices.getUserMedia({ 
+                statusEl.innerHTML = "Solicitando acceso a cámara...";
+                
+                // 1. Solicitar permiso de cámara explícitamente
+                const stream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: 'environment',
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
-                    }
+                    },
+                    audio: false
                 });
                 
-                // 2. Detener el stream (A-Frame lo manejará)
+                statusEl.innerHTML = "Cámara activada, configurando AR...";
+                
+                // 2. Detener stream (A-Frame lo manejará)
                 stream.getTracks().forEach(track => track.stop());
                 
-                // 3. Ocultar pantalla de inicio
-                startScreen.classList.add('hidden');
-                
-                // 4. Iniciar MindAR después de un breve retraso
+                // 3. Iniciar MindAR después de breve retraso
                 setTimeout(() => {
-                    const arSystem = document.getElementById('ar-scene').systems['mindar-image-system'];
-                    if (arSystem) {
+                    try {
+                        const scene = document.getElementById('ar-scene');
+                        const arSystem = scene.systems['mindar-image-system'];
+                        
+                        if (!arSystem) {
+                            throw new Error("Sistema AR no encontrado");
+                        }
+                        
                         arSystem.start();
-                    } else {
-                        alert("Error al iniciar AR. Recarga la página.");
+                        arStarted = true;
+                        uiContainer.classList.add('hidden');
+                        statusEl.innerHTML = "AR iniciado correctamente";
+                        
+                    } catch (error) {
+                        console.error("Error al iniciar AR:", error);
+                        statusEl.innerHTML = `ERROR AR: ${error.message}`;
                     }
-                }, 300);
+                }, 500);
                 
             } catch (error) {
                 console.error("Error de cámara:", error);
+                let message = "Error desconocido";
                 
                 if (error.name === "NotAllowedError") {
-                    // Paso crucial: Mostrar instrucciones para desbloquear permisos
-                    startScreen.innerHTML = `
-                        <h2>Permiso de cámara bloqueado</h2>
-                        <p>Sigue estos pasos:</p>
-                        <ol style="text-align: left; max-width: 80%; margin: 15px auto;">
-                            <li>Cierra completamente tu navegador</li>
-                            <li>Ve a Ajustes > Aplicaciones</li>
-                            <li>Busca tu navegador y selecciona "Permisos"</li>
-                            <li>Asegúrate que la cámara esté permitida</li>
-                            <li>Vuelve a abrir esta página</li>
-                        </ol>
-                        <button onclick="window.location.reload()">YA LO HICE, RECARGAR</button>
-                    `;
-                } else {
-                    alert("Error: " + error.message);
+                    message = "Permiso de cámara denegado. Recarga y permite el acceso.";
+                } else if (error.name === "NotFoundError") {
+                    message = "No se encontró cámara trasera.";
                 }
+                
+                statusEl.innerHTML = `ERROR: ${message}`;
+                startBtn.textContent = "REINTENTAR";
             }
         }
         
+        // Event listeners
         startBtn.addEventListener('click', startAR);
         
         // Verificación inicial
-        if (!checkARSupport()) {
-            startBtn.disabled = true;
+        if (!checkCompatibility()) {
+            statusEl.innerHTML = "Advertencia: Algunas funciones pueden no ser compatibles";
         }
     </script>
 </body>
