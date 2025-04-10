@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inguarán VR</title>
+  <title>Inguarán AR</title>
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/aframe/build/aframe-mindar.js"></script>
   <style>
     body { margin: 0; overflow: hidden; }
+    #ar-scene { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
   </style>
 </head>
 <body>
-  <a-scene mindar-image="imageTargetSrc: ./assets/paleterianeveria.mind;" embedded color-space="sRGB" renderer="precision: mediump;" vr-mode-ui="enabled: false" device-orientation-permission-ui>
+  <a-scene id="ar-scene" mindar-image="imageTargetSrc: ./assets/paleterianeveria.mind; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;" embedded color-space="sRGB" renderer="precision: mediump;" vr-mode-ui="enabled: false">
     <a-assets>
       <a-asset-item id="font" src="https://cdn.aframe.io/fonts/mozillavr.fnt"></a-asset-item>
     </a-assets>
@@ -28,4 +29,5 @@
   </a-scene>
 </body>
 </html>
+
 
