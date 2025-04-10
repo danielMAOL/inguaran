@@ -4,10 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Paletería AR</title>
+  
+  <!-- A-Frame y MindAR -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+  
   <style>
-    body { margin: 0; overflow: hidden; }
+    body { margin: 0; overflow: hidden; background: #000; }
     #loading-message {
       position: fixed;
       top: 50%;
@@ -19,12 +22,14 @@
       border-radius: 10px;
       text-align: center;
       z-index: 1000;
+      font-family: Arial, sans-serif;
     }
   </style>
 </head>
 <body>
   <div id="loading-message">Cargando experiencia AR...</div>
 
+  <!-- Escena AR -->
   <a-scene
     mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true;"
     vr-mode-ui="enabled: false"
@@ -33,26 +38,34 @@
     renderer="colorManagement: true;"
   >
     <a-assets>
+      <!-- Modelo 3D -->
       <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
     </a-assets>
 
-    <!-- Luces para que se vea bien -->
+    <!-- Luces -->
     <a-entity light="type: ambient; intensity: 1"></a-entity>
     <a-entity light="type: directional; intensity: 1" position="1 1 1"></a-entity>
 
     <!-- Cámara -->
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Modelo sobre el marcador -->
+    <!-- Modelo sobre marcador -->
     <a-entity mindar-image-target="targetIndex: 0">
       <a-gltf-model
         id="model-entity"
         src="#model"
         position="0 -0.3 0"
-        scale="0.6 0.6 0.6"
-        rotation="0 0 0"
+        scale="0.5 0.5 0.5"
+        rotation="0 180 0"
         animation-mixer
       ></a-gltf-model>
+      <a-text
+        value="Desde 1950 creando dulces historias"
+        align="center"
+        position="0 0.7 0"
+        color="#FFDD57"
+        width="2.5"
+      ></a-text>
     </a-entity>
   </a-scene>
 
