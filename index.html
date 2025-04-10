@@ -1,92 +1,191 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Paletería AR</title>
-
-  <!-- Librerías -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Paletería Inguarán AR</title>
+  
+  <!-- Librerías con protocolo correcto -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    html, body {
+    body {
       margin: 0;
       padding: 0;
       overflow: hidden;
+      background: #000;
+      position: fixed;
       width: 100%;
       height: 100%;
-      background-color: #000;
+      touch-action: none;
     }
-
-    a-scene {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100% !important;
-      height: 100% !important;
-      margin: 0;
-      padding: 0;
-    }
-
-    canvas {
-      display: block !important;
-      width: 100% !important;
-      height: 100% !important;
-    }
-
+    
     #loading-message {
-      position: fixed;
+      position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0,0,0,0.8);
       color: white;
       padding: 20px;
       border-radius: 10px;
       text-align: center;
-      z-index: 9999;
+      font-family: 'Arial', sans-serif;
+      z-index: 10000;
+      width: 80%;
+      max-width: 300px;
+    }
+    
+    /* Fuerza el canvas a ocupar toda la pantalla */
+    a-scene {
+      position: absolute !important;
+      width: 100% !important;
+      height: 100% !important;
+      top: 0 !important;
+      left: 0 !important;
+    }
+    
+    /* Oculta el loader nativo de MindAR */
+    .arjs-loader {
+      display: none !important;
     }
   </style>
 </head>
 <body>
 
-  <div id="loading-message">Cargando experiencia AR...</div>
+  <div id="loading-message">Escaneando marcador de Paletería Inguarán...</div>
 
   <a-scene
-    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true"
-    color-space="sRGB"
-    embedded
-    renderer="colorManagement: true; logarithmicDepthBuffer: true;"
+    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
     vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: true"
+    device-orientation-permission-ui="enabled: false"
+    renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true; precision: high;"
   >
-    <a-assets></a-assets>
+    <a-assets>
+      <!-- Fuente optimizada para AR -->
+      <a-asset-item id="robotoFont" src="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-asset-item>
+      <img id="fontTexture" src="https://cdn.aframe.io/fonts/Roboto-msdf.png">
+    </a-assets>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <!-- Cámara configurada correctamente -->
+    <a-camera 
+      position="0 0 0" 
+      look-controls="enabled: false"
+      active="true"
+    ></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
-      <a-text
-        value="Desde 1950 creando dulces historias"
-        align="center"
-        position="0 0 0"
-        rotation="0 0 0"
-        color="#FFD700"
-        width="2.5"
-        side="double"
-      ></a-text>
+      <!-- Texto 3D principal con extrusión -->
+      <a-entity position="0 0.5 0">
+        <a-text
+          value="PALETERÍA Y NEVERÍA INGUARÁN"
+          align="center"
+          width="5"
+          color="#FF0066"
+          font="#robotoFont"
+          shader="msdf"
+          negate="false"
+          opacity="1"
+          position="0 0 0.1"
+        ></a-text>
+        
+        <!-- Efecto 3D real mediante extrusión -->
+        <a-entity
+          text="value: PALETERÍA Y NEVERÍA INGUARÁN; align: center; width: 5; color: #990033; font: #robotoFont"
+          position="0 0 0"
+          geometry="primitive: plane; height: auto; width: auto"
+          material="side: double; transparent: true; opacity: 0.8"
+        ></a-entity>
+      </a-entity>
+
+      <!-- Texto secundario con sombra -->
+      <a-entity position="0 -0.2 0">
+        <a-text
+          value="CREANDO HISTORIAS DESDE 1950"
+          align="center"
+          width="4"
+          color="#00CCFF"
+          font="#robotoFont"
+          shader="msdf"
+          position="0 0 0.05"
+        ></a-text>
+        
+        <a-text
+          value="CREANDO HISTORIAS DESDE 1950"
+          align="center"
+          width="4"
+          color="#000000"
+          font="#robotoFont"
+          shader="msdf"
+          position="0.02 -0.02 0"
+          opacity="0.3"
+        ></a-text>
+      </a-entity>
+
+      <!-- Iluminación para mejor visualización -->
+      <a-light type="ambient" intensity="0.6"></a-light>
+      <a-light type="directional" intensity="0.8" position="-1 1 1"></a-light>
     </a-entity>
   </a-scene>
 
   <script>
-    window.addEventListener("load", () => {
-      const loading = document.getElementById("loading-message");
-      document.querySelector("a-scene").addEventListener("loaded", () => {
-        loading.style.display = "none";
+    document.addEventListener('DOMContentLoaded', () => {
+      const loading = document.getElementById('loading-message');
+      const scene = document.querySelector('a-scene');
+      
+      // Solución para problema de media pantalla
+      function resizeAR() {
+        const renderer = scene.renderer;
+        const canvas = renderer.domElement;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        canvas.width = width;
+        canvas.height = height;
+        
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+      }
+      
+      // Configurar eventos
+      window.addEventListener('resize', resizeAR);
+      scene.addEventListener('renderstart', resizeAR);
+      
+      // Verificar compatibilidad
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        loading.textContent = 'AR no soportado. Usa Chrome en móvil.';
+        return;
+      }
+      
+      // Manejo de carga
+      scene.addEventListener('loaded', () => {
+        setTimeout(() => {
+          loading.style.display = 'none';
+          
+          // Animación de aparición
+          const texts = scene.querySelectorAll('a-text, a-entity[text]');
+          texts.forEach((text, index) => {
+            text.setAttribute('animation', {
+              property: 'scale',
+              from: '0 0 0',
+              to: '1 1 1',
+              dur: 800,
+              delay: index * 200,
+              easing: 'easeOutElastic'
+            });
+          });
+        }, 1500);
+      });
+      
+      // Manejo de errores
+      scene.addEventListener('error', (e) => {
+        console.error('AR Error:', e);
+        loading.textContent = 'Error: ' + (e.detail || 'Revisa la consola');
       });
     });
   </script>
-
 </body>
 </html>
-
