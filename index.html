@@ -2,108 +2,155 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AR Paleteria Neveria</title>
-
-    <!-- Importar A-Frame -->
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <!-- Importar MindAR para A-Frame (Image Tracking) -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paletería Nevería AR - Desde 1950 creando dulces historias</title>
     <style>
-        /* Estilos básicos para ocultar elementos mientras carga y mejorar la visualización */
         body {
             margin: 0;
-            overflow: hidden; /* Evita barras de scroll */
+            padding: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
         }
-        /* Opcional: Ocultar el canvas hasta que MindAR esté listo */
-        .a-scene {
-            display: none;
+        
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 999;
         }
-        /* Estilos para los indicadores UI de MindAR (puedes personalizarlos) */
-        .mindar-ui-overlay.ready .mindar-ui-scanning {
-             border: 10px solid #ffffff !important; /* Borde blanco al escanear */
+        
+        #loadingText {
+            margin-top: 20px;
+            font-size: 18px;
         }
-        .mindar-ui-overlay.scanning .mindar-ui-scanning .inner .scanline {
-            background: linear-gradient(to bottom, transparent 0%, #fff 50%, transparent 100%) !important; /* Línea de escaneo blanca */
+        
+        #instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            z-index: 10;
         }
     </style>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mind-ar/1.2.0/mindar-image.prod.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mind-ar/1.2.0/mindar-image-three.prod.js"></script>
 </head>
 <body>
-    <!-- Escena de A-Frame configurada para MindAR Image Tracking -->
-    <a-scene
-        mindar-image="
-            imageTargetSrc: assets/paleterianeveria.mind;
-            maxTrack: 1;
-            uiLoading: yes;
-            uiScanning: yes;
-            uiError: yes;
-        "
-        color-space="sRGB"
-        renderer="colorManagement: true, physicallyCorrectLights"
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false"
-        embedded>
-
-        <!--
-            Assets Management System (opcional pero bueno para pre-cargar).
-            Aquí podrías poner fuentes personalizadas si quisieras.
-        <a-assets>
-             <a-asset-item id="customFont" src="path/to/your/font.json"></a-asset-item>
-             <a-asset-item id="customFontTexture" src="path/to/your/fontTexture.png"></a-asset-item>
-        </a-assets>
-        -->
-
-        <!-- Cámara - MindAR la controla, pero es necesaria en la escena -->
-        <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="far: ${customFields.libVersion}; objects: .clickable"></a-camera>
-
-        <!-- Entidad que representa el marcador de imagen (targetIndex="0" es el primero en tu .mind) -->
-        <a-entity mindar-image-target="targetIndex: 0">
-
-            <!-- Texto 3D que aparecerá sobre el marcador -->
-            <a-text
-                value="desde 1950 creando dulces historias"
-                color="#FFD700" /* Un color dorado/amarillo */
-                align="center"
-                anchor="center"
-                baseline="center"
-                width="2"        /* Ancho máximo antes de saltar línea (ajusta según necesites) */
-                wrap-count="30"  /* Caracteres aproximados por línea */
-                position="0 0.1 0" /* Posición relativa al marcador (X Y Z). Y=0.1 lo pone un poco arriba */
-                scale="0.3 0.3 0.3"> /* Escala del texto (ajusta el tamaño) */
-                <!-- Si usaras una fuente personalizada:
-                font="customFont"
-                font-image="customFontTexture"
-                negate="false"
-                -->
-            </a-text>
-
-            <!-- Opcional: Puedes añadir otros elementos 3D aquí si quieres -->
-            <!-- Ejemplo: Un plano simple debajo del texto
-            <a-plane color="#CCC" height="0.5" width="2.5" position="0 0 -0.01" rotation="-90 0 0"></a-plane>
-            -->
-
-        </a-entity>
-    </a-scene>
-
+    <div id="loading">
+        <div id="loadingText">Cargando experiencia AR...</div>
+    </div>
+    
+    <div id="instructions">
+        Apunta la cámara hacia el marcador para ver el mensaje 3D
+    </div>
+    
     <script>
-        // Pequeño script para mostrar la escena una vez que MindAR esté listo (mejora la carga visual)
         document.addEventListener('DOMContentLoaded', () => {
-            const sceneEl = document.querySelector('a-scene');
-            sceneEl.addEventListener('renderstart', () => {
-                // Mostrar la escena cuando el renderizado comience
-                sceneEl.style.display = 'block';
+            const loading = document.getElementById('loading');
+            const instructions = document.getElementById('instructions');
+            
+            // Inicializar MindAR
+            const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+                container: document.body,
+                imageTargetSrc: 'assets/paleterianeveria.mind',
+                filterMinCF: 0.0001,
+                filterBeta: 0.001,
+                missTolerance: 5
             });
-            // Opcional: Manejar evento si el target se encuentra/pierde
-            const targetEntity = document.querySelector('[mindar-image-target]');
-            targetEntity.addEventListener("targetFound", event => {
-              console.log("Target encontrado!");
-              // Puedes hacer algo cuando se encuentra, como iniciar una animación
+            
+            const { renderer, scene, camera } = mindarThree;
+            
+            // Crear un anchor para el marcador
+            const anchor = mindarThree.addAnchor(0);
+            
+            // Crear el texto 3D
+            const fontLoader = new THREE.FontLoader();
+            
+            fontLoader.load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/fonts/helvetiker_bold.typeface.json', function(font) {
+                const textGeometry = new THREE.TextGeometry('desde 1950\ncreando dulces historias', {
+                    font: font,
+                    size: 0.15,
+                    height: 0.05,
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 0.01,
+                    bevelSize: 0.005,
+                    bevelOffset: 0,
+                    bevelSegments: 5
+                });
+                
+                // Centrar el texto
+                textGeometry.computeBoundingBox();
+                const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+                textGeometry.translate(-textWidth/2, 0, 0);
+                
+                // Material del texto con degradado
+                const textMaterial = [
+                    new THREE.MeshPhongMaterial({ color: 0xFF9D4D, specular: 0x333333 }), // Naranja para el frente
+                    new THREE.MeshPhongMaterial({ color: 0xDD6B1B }) // Naranja más oscuro para los lados
+                ];
+                
+                const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.position.set(0, 0, 0);
+                
+                // Añadir luces
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(0, 1, 1);
+                
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                
+                // Añadir elementos a la escena
+                anchor.group.add(textMesh);
+                anchor.group.add(directionalLight);
+                anchor.group.add(ambientLight);
+                
+                // Añadir animación
+                let angle = 0;
+                const animate = () => {
+                    angle += 0.01;
+                    textMesh.rotation.y = Math.sin(angle) * 0.2;
+                    textMesh.position.y = Math.sin(angle * 0.5) * 0.05 + 0.1;
+                    
+                    renderer.render(scene, camera);
+                    requestAnimationFrame(animate);
+                };
+                
+                animate();
+                
+                // Ocultar pantalla de carga cuando todo esté listo
+                loading.style.display = 'none';
             });
-            targetEntity.addEventListener("targetLost", event => {
-              console.log("Target perdido!");
-              // Puedes hacer algo cuando se pierde
+            
+            // Manejar eventos del marcador
+            anchor.onTargetFound = () => {
+                instructions.style.display = 'none';
+            };
+            
+            anchor.onTargetLost = () => {
+                instructions.style.display = 'block';
+            };
+            
+            // Iniciar la experiencia AR
+            mindarThree.start();
+            
+            // Detener todo cuando se cierra la página
+            window.addEventListener('beforeunload', () => {
+                mindarThree.stop();
+                renderer.dispose();
             });
         });
     </script>
