@@ -28,46 +28,54 @@
 </head>
 <body>
     <div class="arjs-loader">
-        <div>Cargando realidad aumentada... Por favor, apunta tu cámara a un marcador.</div>
+        <div>Cargando AR... Enfoca el marcador con tu cámara.</div>
     </div>
 
-    <a-scene embedded arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" vr-mode-ui="enabled: false">
-        <!-- Usamos el marcador .mind que tienes en tu carpeta assets -->
-        <a-marker type="pattern" preset="custom" url="assets/paleterianeveria.mind">
-            <!-- Texto 3D -->
+    <!-- Escena AR con cámara en vivo -->
+    <a-scene 
+        vr-mode-ui="enabled: false" 
+        embedded 
+        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
+        renderer="logarithmicDepthBuffer: true;"
+    >
+        <!-- Marcador personalizado (.mind) -->
+        <a-marker 
+            type="pattern" 
+            preset="custom" 
+            url="assets/paleterianeveria.mind"
+        >
+            <!-- Texto 3D flotante -->
             <a-text 
                 value="Desde 1950 creando dulces historias" 
                 position="0 1.5 0" 
-                rotation="0 0 0" 
+                rotation="-30 0 0" 
                 color="#FF3366" 
                 align="center" 
-                width="6"
+                width="5"
                 font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
-                shader="standard">
+                shader="standard"
+            >
+                <!-- Animación de rotación suave -->
                 <a-animation 
                     attribute="rotation" 
-                    to="0 360 0" 
-                    dur="10000" 
+                    to="-30 360 0" 
+                    dur="15000" 
                     easing="linear" 
-                    repeat="indefinite">
-                </a-animation>
+                    repeat="indefinite"
+                ></a-animation>
             </a-text>
-            
-            <!-- Fondo decorativo opcional -->
-            <a-circle 
-                radius="1.5" 
-                position="0 0.5 -0.5" 
-                color="#FFF" 
-                opacity="0.5">
-            </a-circle>
         </a-marker>
+
+        <!-- Cámara AR (importante para el fondo en vivo) -->
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        // Ocultar el loader cuando se cargue la escena
+        // Ocultar loader cuando la escena esté lista
         document.querySelector('a-scene').addEventListener('loaded', function() {
-            document.querySelector('.arjs-loader').style.display = 'none';
+            setTimeout(() => {
+                document.querySelector('.arjs-loader').style.display = 'none';
+            }, 1500);
         });
     </script>
 </body>
