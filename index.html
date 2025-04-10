@@ -7,269 +7,145 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            font-family: Arial, sans-serif;
-            background: #000;
-        }
-        #ui-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(0,0,0,0.9);
-            color: white;
-            z-index: 10000;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        button {
-            background: #FF5733;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            margin: 15px 0;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-            min-width: 200px;
-        }
-        #status {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            background: rgba(255,255,255,0.1);
-            max-width: 80%;
-        }
-        .hidden {
-            display: none !important;
-        }
-        #debug-info {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
+        body { margin: 0; overflow: hidden; }
+        #info-panel {
+            position: fixed; 
+            top: 10px; left: 10px;
             background: rgba(0,0,0,0.7);
             color: white;
             padding: 10px;
-            font-size: 12px;
             border-radius: 5px;
-            z-index: 10001;
+            z-index: 1000;
+            font-family: Arial, sans-serif;
+        }
+        #loading-message {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <!-- Interfaz de usuario -->
-    <div id="ui-container">
-        <h1>Paletería AR</h1>
-        <p>Experiencia de Realidad Aumentada</p>
-        <button id="start-btn">INICIAR EXPERIENCIA</button>
-        <div id="status">Presiona el botón para comenzar</div>
-        <div id="extra-help" class="hidden">
-            <p>Si no funciona, prueba:</p>
-            <ol style="text-align: left; max-width: 300px; margin: 10px auto;">
-                <li>Actualizar tu navegador</li>
-                <li>Usar Chrome o Safari</li>
-                <li>Verificar permisos de cámara</li>
-            </ol>
-        </div>
+    <div id="info-panel">
+        <h3>Paletería AR</h3>
+        <p id="status">Preparando experiencia...</p>
+        <p id="detection-status">No se detecta marcador</p>
     </div>
 
-    <!-- Escena AR -->
-    <a-scene id="ar-scene" 
-             mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: false;"
-             vr-mode-ui="enabled: false"
-             loading-screen="enabled: false"
-             embedded>
-             
+    <div id="loading-message">
+        <h2>Cargando experiencia AR</h2>
+        <p>Por favor espera...</p>
+    </div>
+
+    <a-scene 
+        id="ar-scene"
+        mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: false; maxTrack: 2;"
+        vr-mode-ui="enabled: false"
+        loading-screen="enabled: false"
+        renderer="antialias: true;"
+    >
         <a-assets>
             <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
+            <img id="target-image" src="assets/paleterianeveria.png" crossorigin="anonymous">
         </a-assets>
-        
+
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-        
+
         <a-entity mindar-image-target="targetIndex: 0">
-            <a-gltf-model src="#model" position="0 0 0" scale="0.3 0.3 0.3" rotation="0 180 0"></a-gltf-model>
+            <a-gltf-model 
+                src="#model" 
+                position="0 0 0" 
+                scale="0.3 0.3 0.3" 
+                rotation="0 180 0"
+                visible="false"
+                id="model-entity"
+            ></a-gltf-model>
+            <a-plane 
+                src="#target-image"
+                width="1.5"
+                height="1.5"
+                position="0 0 0.1"
+                visible="false"
+                id="target-preview"
+            ></a-plane>
         </a-entity>
     </a-scene>
 
-    <!-- Información de depuración -->
-    <div id="debug-info" class="hidden">
-        <h3>Información de Depuración</h3>
-        <div id="debug-content"></div>
-        <button id="copy-debug">Copiar Info</button>
-    </div>
-
     <script>
-        // Elementos UI
-        const uiContainer = document.getElementById('ui-container');
-        const startBtn = document.getElementById('start-btn');
         const statusEl = document.getElementById('status');
-        const extraHelp = document.getElementById('extra-help');
-        const debugInfo = document.getElementById('debug-info');
-        const debugContent = document.getElementById('debug-content');
-        const copyBtn = document.getElementById('copy-debug');
-        
-        // Mostrar ayuda adicional después de 10 segundos si no hay interacción
-        let helpTimeout = setTimeout(() => {
-            extraHelp.classList.remove('hidden');
-        }, 10000);
-        
-        // Verificar compatibilidad
-        function checkCompatibility() {
-            const checks = {
-                'MediaDevices': !!navigator.mediaDevices,
-                'getUserMedia': !!navigator.mediaDevices?.getUserMedia,
-                'WebGL': hasWebGLSupport(),
-                'A-Frame': !!window.AFRAME,
-                'MindAR': !!window.MINDAR,
-                'HTTPS': window.location.protocol === 'https:'
-            };
-            
-            return {
-                compatible: Object.values(checks).every(Boolean),
-                details: checks
-            };
-        }
-        
-        function hasWebGLSupport() {
-            try {
-                const canvas = document.createElement('canvas');
-                return !!(
-                    window.WebGLRenderingContext && 
-                    (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-                );
-            } catch (e) {
-                return false;
-            }
-        }
-        
-        // Actualizar estado en UI
-        function updateStatus(message, isError = false) {
-            statusEl.textContent = message;
-            statusEl.style.color = isError ? '#ff6b6b' : 'white';
-            console.log(message);
-            
-            // Mostrar información de depuración después de errores
-            if (isError) {
-                showDebugInfo();
-            }
-        }
-        
-        // Mostrar información de depuración
-        function showDebugInfo() {
-            const compatibility = checkCompatibility();
-            let debugText = '<strong>Estado del Sistema:</strong><br><ul>';
-            
-            // Información de compatibilidad
-            for (const [key, value] of Object.entries(compatibility.details)) {
-                debugText += `<li>${key}: ${value ? '✅' : '❌'}</li>`;
-            }
-            
-            debugText += '</ul><strong>Navegador:</strong> ' + navigator.userAgent;
-            debugText += '<br><strong>URL:</strong> ' + window.location.href;
-            
-            debugContent.innerHTML = debugText;
-            debugInfo.classList.remove('hidden');
-        }
-        
-        // Copiar información de depuración
-        copyBtn.addEventListener('click', () => {
-            const range = document.createRange();
-            range.selectNode(debugContent);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-            document.execCommand('copy');
-            window.getSelection().removeAllRanges();
-            alert('Información copiada al portapapeles');
+        const detectionStatus = document.getElementById('detection-status');
+        const loadingMessage = document.getElementById('loading-message');
+        const modelEntity = document.getElementById('model-entity');
+        const targetPreview = document.getElementById('target-preview');
+
+        let arSystem;
+        let isModelLoaded = false;
+
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            statusEl.textContent = "Sistema AR listo";
+            loadingMessage.style.display = 'none';
+            targetPreview.setAttribute('visible', 'true');
+            setTimeout(startAR, 500);
         });
-        
-        // Iniciar experiencia AR
-        async function startARExperience() {
-            clearTimeout(helpTimeout);
-            startBtn.disabled = true;
-            
-            // Verificar compatibilidad
-            const compatibility = checkCompatibility();
-            if (!compatibility.compatible) {
-                updateStatus("Tu dispositivo/navegador no es compatible", true);
-                showDebugInfo();
-                return;
-            }
-            
-            updateStatus("Solicitando acceso a la cámara...");
-            
+
+        document.querySelector('a-asset-item[id="model"]').addEventListener('loaded', function() {
+            isModelLoaded = true;
+            modelEntity.setAttribute('visible', 'true');
+            targetPreview.setAttribute('visible', 'false');
+        });
+
+        async function startAR() {
             try {
-                // 1. Solicitar permisos de cámara explícitamente
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
                         facingMode: 'environment',
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
-                    }
+                    } 
                 });
-                
-                updateStatus("Cámara activada, iniciando AR...");
-                
-                // 2. Detener el stream (A-Frame lo manejará)
                 stream.getTracks().forEach(track => track.stop());
-                
-                // 3. Iniciar MindAR después de breve retraso
-                setTimeout(() => {
-                    try {
-                        const scene = document.getElementById('ar-scene');
-                        const arSystem = scene.systems['mindar-image-system'];
-                        
-                        if (!arSystem) {
-                            throw new Error("El sistema AR no se cargó correctamente");
-                        }
-                        
-                        arSystem.start();
-                        updateStatus("Experiencia AR iniciada");
-                        uiContainer.classList.add('hidden');
-                        
-                    } catch (error) {
-                        console.error("Error al iniciar AR:", error);
-                        updateStatus(`Error al iniciar AR: ${error.message}`, true);
-                        startBtn.disabled = false;
-                    }
-                }, 500);
-                
+                arSystem = document.querySelector('a-scene').systems['mindar-image-system'];
+                arSystem.start();
+                setInterval(updateDetectionStatus, 500);
             } catch (error) {
-                console.error("Error de cámara:", error);
-                let errorMessage = "Error desconocido";
-                
-                if (error.name === "NotAllowedError") {
-                    errorMessage = "Permiso de cámara denegado. Por favor recarga la página y permite el acceso.";
-                } else if (error.name === "NotFoundError") {
-                    errorMessage = "No se encontró cámara trasera. Usa un dispositivo con cámara.";
-                } else if (error.name === "NotSupportedError") {
-                    errorMessage = "Tu navegador no soporta AR. Prueba con Chrome o Safari.";
-                }
-                
-                updateStatus(errorMessage, true);
-                startBtn.disabled = false;
-                startBtn.textContent = "REINTENTAR";
+                console.error("Error al iniciar AR:", error);
+                statusEl.textContent = "Error: " + error.message;
             }
         }
-        
-        // Event listeners
-        startBtn.addEventListener('click', startARExperience);
-        
-        // Verificación inicial al cargar
-        window.addEventListener('load', () => {
-            const compatibility = checkCompatibility();
-            if (!compatibility.compatible) {
-                updateStatus("Advertencia: Algunas funciones pueden no ser compatibles", true);
+
+        function updateDetectionStatus() {
+            const scene = document.querySelector('a-scene');
+            const mindarSystem = scene.systems['mindar-image-system'];
+            const targets = mindarSystem.targets;
+            
+            if (targets && targets[0]) {
+                const target = targets[0];
+                if (target.visible) {
+                    detectionStatus.textContent = "✅ Marcador detectado!";
+                    detectionStatus.style.color = "lightgreen";
+                } else {
+                    detectionStatus.textContent = "🔍 Apunta al cartel...";
+                    detectionStatus.style.color = "yellow";
+                }
             }
-        });
+        }
+
+        setTimeout(() => {
+            if (detectionStatus.textContent.includes("No se detecta")) {
+                detectionStatus.innerHTML = `
+                    ❗ No se detecta marcador. Verifica:<br>
+                    1. Que apuntas al cartel correcto<br>
+                    2. Buena iluminación<br>
+                    3. Cámara enfocando bien
+                `;
+            }
+        }, 15000);
     </script>
 </body>
 </html>
+
