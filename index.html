@@ -3,155 +3,129 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paletería Nevería AR - Desde 1950 creando dulces historias</title>
+    <title>Paletería Nevería AR</title>
     <style>
         body {
             margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
             overflow: hidden;
         }
-        
         #loading {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white;
-            z-index: 999;
+            z-index: 1000;
         }
-        
-        #loadingText {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-        
         #instructions {
             position: fixed;
             bottom: 20px;
-            left: 0;
             width: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
             text-align: center;
-            padding: 10px;
-            font-size: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px 0;
             z-index: 10;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Carga de las librerías necesarias -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mind-ar/1.2.0/mindar-image.prod.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mind-ar/1.2.0/mindar-image-three.prod.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js"></script>
 </head>
 <body>
-    <div id="loading">
-        <div id="loadingText">Cargando experiencia AR...</div>
-    </div>
-    
-    <div id="instructions">
-        Apunta la cámara hacia el marcador para ver el mensaje 3D
-    </div>
-    
+    <div id="loading">Cargando, por favor espera...</div>
+    <div id="instructions">Apunta la cámara hacia el marcador</div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        const start = async () => {
+            // Ocultar mensaje de carga cuando todo esté listo
             const loading = document.getElementById('loading');
             const instructions = document.getElementById('instructions');
-            
+
             // Inicializar MindAR
-            const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+            const mindarThree = new MindARThree({
                 container: document.body,
-                imageTargetSrc: 'assets/paleterianeveria.mind',
-                filterMinCF: 0.0001,
-                filterBeta: 0.001,
-                missTolerance: 5
+                imageTargetSrc: './assets/paleterianeveria.mind',
             });
             
             const { renderer, scene, camera } = mindarThree;
-            
-            // Crear un anchor para el marcador
+
+            // Crear anchor (punto de anclaje) para el target
             const anchor = mindarThree.addAnchor(0);
-            
-            // Crear el texto 3D
+
+            // Crear texto 3D
             const fontLoader = new THREE.FontLoader();
             
-            fontLoader.load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/fonts/helvetiker_bold.typeface.json', function(font) {
-                const textGeometry = new THREE.TextGeometry('desde 1950\ncreando dulces historias', {
+            fontLoader.load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/fonts/helvetiker_bold.typeface.json', function(font) {
+                const textGeo = new THREE.TextGeometry('desde 1950\ncreando dulces historias', {
                     font: font,
-                    size: 0.15,
-                    height: 0.05,
-                    curveSegments: 12,
+                    size: 0.1,
+                    height: 0.02,
+                    curveSegments: 4,
                     bevelEnabled: true,
                     bevelThickness: 0.01,
-                    bevelSize: 0.005,
-                    bevelOffset: 0,
-                    bevelSegments: 5
+                    bevelSize: 0.005
                 });
                 
                 // Centrar el texto
-                textGeometry.computeBoundingBox();
-                const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-                textGeometry.translate(-textWidth/2, 0, 0);
+                textGeo.computeBoundingBox();
+                const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
                 
-                // Material del texto con degradado
-                const textMaterial = [
-                    new THREE.MeshPhongMaterial({ color: 0xFF9D4D, specular: 0x333333 }), // Naranja para el frente
-                    new THREE.MeshPhongMaterial({ color: 0xDD6B1B }) // Naranja más oscuro para los lados
-                ];
+                // Material para el texto
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0xFF5500,
+                    metalness: 0.3,
+                    roughness: 0.4
+                });
                 
-                const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-                textMesh.position.set(0, 0, 0);
+                const textMesh = new THREE.Mesh(textGeo, material);
+                textMesh.position.x = centerOffset;
+                textMesh.position.y = 0;
+                textMesh.position.z = 0;
                 
                 // Añadir luces
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                directionalLight.position.set(0, 1, 1);
+                const light = new THREE.DirectionalLight(0xffffff, 1);
+                light.position.set(0, 0, 1);
+                scene.add(light);
                 
                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                scene.add(ambientLight);
                 
-                // Añadir elementos a la escena
+                // Añadir el texto al anchor
                 anchor.group.add(textMesh);
-                anchor.group.add(directionalLight);
-                anchor.group.add(ambientLight);
                 
-                // Añadir animación
-                let angle = 0;
-                const animate = () => {
-                    angle += 0.01;
-                    textMesh.rotation.y = Math.sin(angle) * 0.2;
-                    textMesh.position.y = Math.sin(angle * 0.5) * 0.05 + 0.1;
-                    
-                    renderer.render(scene, camera);
-                    requestAnimationFrame(animate);
+                // Eventos del target
+                anchor.onTargetFound = () => {
+                    console.log("Target encontrado");
+                    instructions.style.display = "none";
                 };
                 
-                animate();
+                anchor.onTargetLost = () => {
+                    console.log("Target perdido");
+                    instructions.style.display = "block";
+                };
                 
-                // Ocultar pantalla de carga cuando todo esté listo
-                loading.style.display = 'none';
+                // Ocultar pantalla de carga
+                loading.style.display = "none";
             });
             
-            // Manejar eventos del marcador
-            anchor.onTargetFound = () => {
-                instructions.style.display = 'none';
-            };
+            // Iniciar experiencia AR
+            await mindarThree.start();
             
-            anchor.onTargetLost = () => {
-                instructions.style.display = 'block';
-            };
-            
-            // Iniciar la experiencia AR
-            mindarThree.start();
-            
-            // Detener todo cuando se cierra la página
-            window.addEventListener('beforeunload', () => {
-                mindarThree.stop();
-                renderer.dispose();
+            // Loop de renderizado
+            renderer.setAnimationLoop(() => {
+                renderer.render(scene, camera);
             });
+        };
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            start();
         });
     </script>
 </body>
