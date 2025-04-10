@@ -2,197 +2,152 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Paletería AR</title>
-    
-    <!-- A-Frame y MindAR con CDNs confiables -->
-    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.2.0/dist/aframe-master.min.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
-    
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-        }
-        #container {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-        #start-screen {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: #1a1a2e;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        body { margin: 0; overflow: hidden; background: #000; }
+        #start-screen, #error-screen {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; text-align: center;
+            padding: 20px; box-sizing: border-box;
             z-index: 1000;
-            text-align: center;
         }
-        #loading-screen {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: #16213e;
-            color: white;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-        }
-        #error-screen {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: #4a0000;
-            color: white;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1001;
-            padding: 20px;
-            text-align: center;
-        }
+        #start-screen { background: #1a1a2e; }
+        #error-screen { background: #4a0000; display: none; }
         button {
-            background: #e94560;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            margin-top: 20px;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
+            background: #e94560; color: white;
+            border: none; padding: 15px 30px;
+            margin-top: 20px; border-radius: 5px;
+            font-size: 16px; cursor: pointer;
         }
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div id="container">
-        <!-- Pantallas de estado -->
-        <div id="start-screen">
-            <h1>Paletería AR</h1>
-            <p>Experiencia de Realidad Aumentada</p>
-            <button id="start-btn">INICIAR EXPERIENCIA</button>
-        </div>
-        
-        <div id="loading-screen">
-            <h2>Cargando...</h2>
-            <p>Por favor espera mientras se prepara la experiencia AR</p>
-            <div id="progress-bar" style="width:200px;height:20px;background:#333;margin-top:20px;">
-                <div id="progress" style="width:0%;height:100%;background:#e94560;"></div>
-            </div>
-        </div>
-        
-        <div id="error-screen" class="hidden">
-            <h2>Error</h2>
-            <p id="error-message">Ha ocurrido un problema al cargar la experiencia AR</p>
-            <button id="retry-btn">Reintentar</button>
-        </div>
-        
-        <!-- Escena A-Frame -->
-        <a-scene id="ar-scene" mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: false;" 
-                 vr-mode-ui="enabled: false" loading-screen="enabled: false" renderer="logarithmicDepthBuffer: true;">
-            <a-assets>
-                <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
-            </a-assets>
-            
-            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-            
-            <a-entity mindar-image-target="targetIndex: 0">
-                <a-gltf-model src="#model" position="0 0 0" scale="0.3 0.3 0.3" rotation="0 180 0"></a-gltf-model>
-                <a-text value="Desde 1950" position="0 0.7 0" color="#e94560" width="4"></a-text>
-            </a-entity>
-        </a-scene>
+    <div id="start-screen">
+        <h2>Experiencia AR Paletería</h2>
+        <p>Necesitamos acceso a tu cámara para activar la realidad aumentada</p>
+        <button id="start-btn">ACTIVAR CÁMARA</button>
     </div>
+    
+    <div id="error-screen">
+        <h2>Permiso requerido</h2>
+        <p id="error-msg">Debes permitir el acceso a la cámara para continuar</p>
+        <button id="retry-btn">REINTENTAR</button>
+        <p style="margin-top:30px;font-size:14px;">
+            Si el problema persiste:<br>
+            1. Verifica los permisos de cámara en tu navegador<br>
+            2. Prueba en otro navegador (Chrome/Safari)<br>
+            3. Asegúrate de estar en HTTPS
+        </p>
+    </div>
+
+    <a-scene id="ar-scene" mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: false;" 
+             vr-mode-ui="enabled: false" loading-screen="enabled: false">
+        <a-assets>
+            <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
+        </a-assets>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-entity mindar-image-target="targetIndex: 0">
+            <a-gltf-model src="#model" position="0 0 0" scale="0.3 0.3 0.3" rotation="0 180 0"></a-gltf-model>
+            <a-text value="Desde 1950" position="0 0.7 0" color="#e94560" width="4"></a-text>
+        </a-entity>
+    </a-scene>
 
     <script>
         // Elementos UI
         const startScreen = document.getElementById('start-screen');
-        const loadingScreen = document.getElementById('loading-screen');
         const errorScreen = document.getElementById('error-screen');
-        const errorMessage = document.getElementById('error-message');
-        const progressBar = document.getElementById('progress');
-        
+        const errorMsg = document.getElementById('error-msg');
+        let permissionRequested = false;
+
         // Verificar compatibilidad
-        function checkCompatibility() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                showError("Tu navegador no soporta acceso a la cámara o está bloqueado.");
-                return false;
-            }
-            
-            if (!AFRAME.components['mindar-image-system']) {
-                showError("No se pudo cargar el sistema AR. Recarga la página.");
-                return false;
-            }
-            
-            return true;
+        function isARSupported() {
+            return !!(
+                navigator.mediaDevices && 
+                navigator.mediaDevices.getUserMedia && 
+                AFRAME.components['mindar-image-system']
+            );
         }
-        
-        // Mostrar error
+
+        // Manejar error
         function showError(message) {
-            errorMessage.textContent = message;
+            errorMsg.textContent = message;
+            startScreen.classList.add('hidden');
             errorScreen.classList.remove('hidden');
-            loadingScreen.classList.add('hidden');
         }
-        
+
         // Iniciar AR
         async function startAR() {
-            if (!checkCompatibility()) return;
-            
-            startScreen.classList.add('hidden');
-            loadingScreen.style.display = 'flex';
-            
+            if (!isARSupported()) {
+                showError("Tu navegador no soporta AR o bloqueó la cámara");
+                return;
+            }
+
             try {
-                // 1. Solicitar permisos de cámara
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                if (permissionRequested) {
+                    // Si ya se solicitó permiso, forzar recarga
+                    window.location.reload();
+                    return;
+                }
+
+                permissionRequested = true;
+                
+                // 1. Solicitar permiso de cámara
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    } 
+                });
+                
+                // 2. Detener stream (A-Frame lo manejará)
                 stream.getTracks().forEach(track => track.stop());
                 
-                // 2. Cargar assets con progreso
-                const scene = document.getElementById('ar-scene');
-                const assets = scene.querySelector('a-assets');
+                // 3. Ocultar pantalla de inicio
+                startScreen.classList.add('hidden');
+                errorScreen.classList.add('hidden');
                 
-                assets.addEventListener('progress', (e) => {
-                    const progress = (e.detail.loaded / e.detail.total) * 100;
-                    progressBar.style.width = `${progress}%`;
-                });
-                
-                await new Promise((resolve) => {
-                    assets.addEventListener('loaded', resolve);
-                    setTimeout(resolve, 5000); // Timeout por si falla la carga
-                });
-                
-                // 3. Iniciar MindAR
-                const arSystem = scene.systems['mindar-image-system'];
-                arSystem.start();
-                
-                loadingScreen.classList.add('hidden');
+                // 4. Iniciar MindAR después de un breve retraso
+                setTimeout(() => {
+                    const arSystem = document.getElementById('ar-scene').systems['mindar-image-system'];
+                    if (arSystem) {
+                        arSystem.start();
+                    } else {
+                        showError("Error al iniciar el sistema AR");
+                    }
+                }, 500);
                 
             } catch (error) {
-                console.error("Error en AR:", error);
-                showError(error.message || "Error al iniciar la cámara AR");
+                console.error("Error de cámara:", error);
+                let message = "Error desconocido";
+                
+                if (error.name === "NotAllowedError") {
+                    message = "Debes PERMITIR el acceso a la cámara en los ajustes de tu navegador";
+                } else if (error.name === "NotFoundError") {
+                    message = "No se encontró cámara trasera. Usa un dispositivo con cámara.";
+                } else if (error.name === "NotSupportedError") {
+                    message = "Tu navegador no soporta AR. Prueba con Chrome o Safari.";
+                }
+                
+                showError(message);
+                permissionRequested = false;
             }
         }
-        
-        // Event listeners
+
+        // Event Listeners
         document.getElementById('start-btn').addEventListener('click', startAR);
         document.getElementById('retry-btn').addEventListener('click', startAR);
-        
-        // Verificar si los assets están cargados
-        window.addEventListener('load', () => {
-            const model = document.querySelector('a-asset-item[id="model"]');
-            if (!model) {
-                showError("No se encontró el modelo 3D. Verifica tus archivos.");
-            }
-        });
+
+        // Verificación inicial
+        if (!isARSupported()) {
+            showError("Tu navegador no soporta realidad aumentada. Usa Chrome o Safari.");
+        }
     </script>
 </body>
 </html>
