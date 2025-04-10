@@ -1,96 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta charset="utf-8">
-    <title>Paletería Nevería - AR</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        .arjs-loader {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-family: Arial;
-            z-index: 100;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Paletería AR</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+    }
+    a-scene {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
 </head>
 <body>
-    <div class="arjs-loader">
-        <p>Enfoca el marcador con tu cámara...</p>
-    </div>
+  <a-scene
+    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true"
+    embedded
+    color-space="sRGB"
+    renderer="colorManagement: true; logarithmicDepthBuffer: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: true"
+  >
+    <a-assets></a-assets>
 
-    <a-scene 
-        vr-mode-ui="enabled: false"
-        embedded
-        arjs="
-            sourceType: webcam;
-            detectionMode: mono_and_matrix;
-            matrixCodeType: 3x3;
-            debugUIEnabled: true;  <!-- Activamos modo debug para ver mensajes -->
-        "
-        renderer="logarithmicDepthBuffer: true;"
-    >
-        <!-- Marcador con tamaño explícito y parámetros optimizados -->
-        <a-marker 
-            type="pattern" 
-            preset="custom" 
-            url="assets/paleterianeveria.mind"
-            size="0.2"  <!-- Tamaño en metros -->
-            raycaster="objects: [clickable]"
-            emitevents="true"
-        >
-            <!-- Texto con propiedades mejoradas -->
-            <a-text 
-                value="Desde 1950 creando dulces historias"
-                position="0 0.2 0"
-                rotation="-90 0 0"
-                color="#FF3366"
-                align="center"
-                width="1.5"
-                font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
-                shader="standard"
-                side="double"
-            ></a-text>
-        </a-marker>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <a-entity camera></a-entity>
-    </a-scene>
-
-    <script>
-        // Mostrar mensajes en consola para diagnóstico
-        const scene = document.querySelector('a-scene');
-        
-        scene.addEventListener('loaded', () => {
-            console.log('Escena cargada');
-        });
-
-        scene.addEventListener('markerFound', (e) => {
-            console.log('Marcador detectado', e.detail);
-            document.querySelector('.arjs-loader').style.display = 'none';
-        });
-
-        scene.addEventListener('markerLost', () => {
-            console.log('Marcador perdido');
-            document.querySelector('.arjs-loader').style.display = 'flex';
-        });
-
-        // Verificar si el marcador se está cargando
-        const marker = document.querySelector('a-marker');
-        marker.addEventListener('loaded', () => {
-            console.log('Marcador cargado correctamente');
-        });
-        marker.addEventListener('error', () => {
-            console.error('Error al cargar el marcador');
-        });
-    </script>
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-text 
+        value="Desde 1950 creando dulces historias"
+        align="center"
+        position="0 0 0"
+        color="#FF3366"
+        width="2"
+        side="double"
+      ></a-text>
+    </a-entity>
+  </a-scene>
 </body>
 </html>
+
