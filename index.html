@@ -1,233 +1,74 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Paletería Inguarán AR</title>
-  
-  <!-- Preconexión para mejorar carga -->
-  <link rel="preconnect" href="https://aframe.io">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-
-  <!-- Librerías con fallback -->
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    body {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      touch-action: none;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-    
-    #loading-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: rgba(0,0,0,0.9);
-      z-index: 1000;
-      color: white;
-    }
-    
-    #loading-message {
-      text-align: center;
-      margin: 20px;
-      max-width: 80%;
-    }
-    
-    #retry-button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: #FF0066;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      font-size: 16px;
-      display: none;
-      cursor: pointer;
-    }
-    
-    a-scene {
-      position: absolute;
-      width: 100% !important;
-      height: 100% !important;
-      top: 0 !important;
-      left: 0 !important;
-    }
-    
-    /* Asegura que el canvas ocupe toda la pantalla */
-    canvas {
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100% !important;
-      height: 100% !important;
-    }
-  </style>
+    <meta charset="utf-8">
+    <title>Paletería Nevería - Realidad Aumentada</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        .arjs-loader {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+    </style>
 </head>
 <body>
+    <div class="arjs-loader">
+        <div>Cargando realidad aumentada... Por favor, apunta tu cámara a un marcador.</div>
+    </div>
 
-  <div id="loading-container">
-    <div id="loading-message">Inicializando realidad aumentada...</div>
-    <button id="retry-button">Reintentar</button>
-  </div>
+    <a-scene embedded arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" vr-mode-ui="enabled: false">
+        <!-- Usamos el marcador .mind que tienes en tu carpeta assets -->
+        <a-marker type="pattern" preset="custom" url="assets/paleterianeveria.mind">
+            <!-- Texto 3D -->
+            <a-text 
+                value="Desde 1950 creando dulces historias" 
+                position="0 1.5 0" 
+                rotation="0 0 0" 
+                color="#FF3366" 
+                align="center" 
+                width="6"
+                font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
+                shader="standard">
+                <a-animation 
+                    attribute="rotation" 
+                    to="0 360 0" 
+                    dur="10000" 
+                    easing="linear" 
+                    repeat="indefinite">
+                </a-animation>
+            </a-text>
+            
+            <!-- Fondo decorativo opcional -->
+            <a-circle 
+                radius="1.5" 
+                position="0 0.5 -0.5" 
+                color="#FFF" 
+                opacity="0.5">
+            </a-circle>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
 
-  <a-scene
-    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-    renderer="antialias: true; alpha: false; logarithmicDepthBuffer: false; precision: medium;"
-  >
-    <a-assets>
-      <!-- Texturas y fuentes locales para mejor rendimiento -->
-      <img id="texture" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HgAGgwJ/lK3Q6wAAAABJRU5ErkJggg==" crossorigin="anonymous">
-    </a-assets>
-
-    <!-- Cámara optimizada -->
-    <a-camera 
-      position="0 0 0" 
-      look-controls="enabled: false"
-      wasd-controls="enabled: false"
-      active="true"
-    ></a-camera>
-
-    <a-entity mindar-image-target="targetIndex: 0">
-      <!-- Texto principal como geometría 3D -->
-      <a-entity position="0 0.5 0" rotation="0 0 0">
-        <a-entity
-          geometry="primitive: plane; height: 0.3; width: 2"
-          material="color: #FF0066; shader: flat; src: #texture"
-          text="value: PALETERÍA Y NEVERÍA INGUARÁN; align: center; width: 2; color: white; font: roboto; wrapCount: 20"
-        ></a-entity>
-        
-        <!-- Efecto 3D con offset -->
-        <a-entity
-          geometry="primitive: plane; height: 0.3; width: 2"
-          material="color: #990033; shader: flat; opacity: 0.8"
-          position="0 0 -0.05"
-        ></a-entity>
-      </a-entity>
-
-      <!-- Texto secundario -->
-      <a-entity position="0 -0.2 0">
-        <a-entity
-          geometry="primitive: plane; height: 0.2; width: 1.8"
-          material="color: #00CCFF; shader: flat"
-          text="value: CREANDO HISTORIAS DESDE 1950; align: center; width: 1.8; color: white; font: roboto; wrapCount: 25"
-        ></a-entity>
-      </a-entity>
-
-      <!-- Iluminación básica -->
-      <a-light type="ambient" color="#FFFFFF" intensity="0.6"></a-light>
-      <a-light type="directional" color="#FFFFFF" intensity="0.5" position="0 1 1"></a-light>
-    </a-entity>
-  </a-scene>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const loadingContainer = document.getElementById('loading-container');
-      const loadingMessage = document.getElementById('loading-message');
-      const retryButton = document.getElementById('retry-button');
-      const scene = document.querySelector('a-scene');
-      
-      // Solución para problemas de caché y modo incógnito
-      const clearARCache = () => {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(registrations => {
-            registrations.forEach(registration => registration.unregister());
-          });
-        }
-        caches.keys().then(cacheNames => {
-          cacheNames.forEach(cacheName => caches.delete(cacheName));
+    <script>
+        // Ocultar el loader cuando se cargue la escena
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            document.querySelector('.arjs-loader').style.display = 'none';
         });
-      };
-      
-      // Configurar reintento
-      retryButton.addEventListener('click', () => {
-        loadingMessage.textContent = "Reiniciando experiencia AR...";
-        retryButton.style.display = 'none';
-        clearARCache();
-        setTimeout(() => window.location.reload(true), 500);
-      });
-      
-      // Verificar compatibilidad
-      const checkCompatibility = () => {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const isChrome = /Chrome/.test(navigator.userAgent);
-        
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          loadingMessage.innerHTML = "Tu navegador no soporta AR.<br>Usa Chrome en Android o Safari en iOS.";
-          retryButton.style.display = 'block';
-          return false;
-        }
-        
-        if (isIOS && !isChrome) {
-          loadingMessage.innerHTML = "Para mejor rendimiento en iOS:<br>1. Usa Safari<br>2. Ve a Ajustes > Safari<br>3. Activa 'Solicitar acceso a escritorio'";
-          retryButton.style.display = 'block';
-        }
-        
-        return true;
-      };
-      
-      // Inicialización AR
-      const initAR = () => {
-        if (!checkCompatibility()) return;
-        
-        // Forzar modo mono si es necesario
-        const arSystem = scene.systems['mindar-image-system'];
-        if (arSystem) {
-          arSystem.forceMono = true;
-          arSystem.maxTrack = 1;
-        }
-        
-        // Asegurar que el texto sea visible
-        setTimeout(() => {
-          const texts = scene.querySelectorAll('[text]');
-          texts.forEach(text => {
-            text.setAttribute('material', 'opacity', 1);
-            text.setAttribute('visible', 'true');
-          });
-        }, 2000);
-      };
-      
-      // Manejo de eventos
-      scene.addEventListener('loaded', () => {
-        loadingMessage.textContent = "Escaneando marcador...";
-        setTimeout(() => {
-          loadingContainer.style.display = 'none';
-          initAR();
-        }, 1500);
-      });
-      
-      scene.addEventListener('error', (e) => {
-        console.error('AR Error:', e);
-        loadingMessage.innerHTML = "Error al iniciar AR.<br>Asegúrate de dar permisos a la cámara.";
-        retryButton.style.display = 'block';
-      });
-      
-      // Iniciar limpieza de caché
-      clearARCache();
-      initAR();
-    });
-  </script>
+    </script>
 </body>
 </html>
