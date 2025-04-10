@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Paletería AR</title>
 
   <!-- Librerías -->
@@ -12,8 +12,12 @@
   <style>
     body {
       margin: 0;
+      padding: 0;
       overflow: hidden;
       font-family: Arial, sans-serif;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     #loading-message {
       position: fixed;
@@ -27,8 +31,13 @@
       text-align: center;
       z-index: 9999;
     }
-    .arjs-loader {
-      display: none; /* Ocultamos el loader por defecto ya que tenemos el nuestro */
+    a-scene {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
     }
   </style>
 </head>
@@ -37,19 +46,21 @@
   <div id="loading-message">Cargando experiencia AR...</div>
 
   <a-scene
-    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
-    color-space="sRGB"
-    embedded
-    renderer="colorManagement: true; logarithmicDepthBuffer: true;"
+    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no; maxTrack: 1;"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
+    renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true; precision: high;"
   >
     <a-assets>
       <a-asset-item id="modelo" src="assets/Capoeira.glb"></a-asset-item>
-      <img id="textura" src="assets/texture.jpg" crossorigin="anonymous" />
     </a-assets>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <!-- Cámara configurada correctamente -->
+    <a-camera 
+      position="0 0 0" 
+      look-controls="enabled: false"
+      wasd-controls="enabled: false"
+    ></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
       <a-gltf-model
@@ -57,7 +68,7 @@
         position="0 -0.2 0"
         scale="0.3 0.3 0.3"
         rotation="0 0 0"
-        animation-mixer="clip: *;"
+        animation-mixer
       ></a-gltf-model>
 
       <a-text
@@ -66,8 +77,6 @@
         position="0 0.7 0"
         color="#FF5733"
         width="2.5"
-        shader="msdf"
-        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
       ></a-text>
     </a-entity>
   </a-scene>
@@ -77,32 +86,38 @@
       const loading = document.getElementById('loading-message');
       const scene = document.querySelector('a-scene');
       
-      // Manejar errores de carga
-      scene.addEventListener('error', (e) => {
-        loading.textContent = 'Error al cargar la experiencia AR. Por favor recarga la página.';
-        console.error('Error en la escena AR:', e.detail);
-      });
+      // Verificar compatibilidad antes de iniciar
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        loading.textContent = 'Tu dispositivo no soporta AR o no tiene cámara.';
+        return;
+      }
       
-      // Ocultar loader cuando todo esté listo
-      scene.addEventListener('loaded', () => {
+      // Configuración inicial para asegurar modo mono
+      if (scene.hasLoaded) {
+        initAR();
+      } else {
+        scene.addEventListener('loaded', initAR);
+      }
+      
+      function initAR() {
+        // Forzar modo mono
+        const systems = scene.systems;
+        if (systems['mindar-image-system']) {
+          systems['mindar-image-system'].forceMono = true;
+        }
+        
+        // Ocultar loader cuando todo esté listo
         setTimeout(() => {
           loading.style.display = 'none';
-        }, 500); // Pequeño delay para asegurar que todo está listo
-      });
+        }, 1000);
+      }
       
-      // Mostrar mensaje si la carga tarda demasiado
-      const loadingTimeout = setTimeout(() => {
-        if (loading.style.display !== 'none') {
-          loading.textContent = 'La carga está tardando más de lo esperado. Por favor verifica tu conexión a internet.';
-        }
-      }, 10000);
-      
-      // Limpiar timeout cuando la escena cargue
-      scene.addEventListener('loaded', () => {
-        clearTimeout(loadingTimeout);
+      // Manejo de errores
+      scene.addEventListener('error', (e) => {
+        loading.textContent = 'Error al iniciar la cámara. Asegúrate de dar permisos.';
+        console.error('AR Error:', e.detail);
       });
     });
   </script>
 </body>
 </html>
-
