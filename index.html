@@ -1,151 +1,131 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paletería AR</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        #info-panel {
-            position: fixed; 
-            top: 10px; left: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 1000;
-            font-family: Arial, sans-serif;
-        }
-        #loading-message {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paletería AR</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #info-panel {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 1000;
+      font-family: Arial, sans-serif;
+    }
+    #loading-message {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <div id="info-panel">
-        <h3>Paletería AR</h3>
-        <p id="status">Preparando experiencia...</p>
-        <p id="detection-status">No se detecta marcador</p>
-    </div>
+  <div id="info-panel">
+    <h3>Paletería AR</h3>
+    <p id="status">Preparando experiencia...</p>
+    <p id="detection-status">No se detecta marcador</p>
+  </div>
 
-    <div id="loading-message">
-        <h2>Cargando experiencia AR</h2>
-        <p>Por favor espera...</p>
-    </div>
+  <div id="loading-message">
+    <h2>Cargando experiencia AR</h2>
+    <p>Por favor espera...</p>
+  </div>
 
-    <a-scene 
-        id="ar-scene"
-        mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: false; maxTrack: 2;"
-        vr-mode-ui="enabled: false"
-        loading-screen="enabled: false"
-        renderer="antialias: true;"
-    >
-        <a-assets>
-            <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
-            <img id="target-image" src="assets/paleterianeveria.png" crossorigin="anonymous">
-        </a-assets>
+  <a-scene
+    id="ar-scene"
+    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: false; maxTrack: 2;"
+    vr-mode-ui="enabled: false"
+    loading-screen="enabled: false"
+    renderer="antialias: true;"
+  >
+    <a-assets>
+      <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
+    </a-assets>
 
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <a-entity mindar-image-target="targetIndex: 0">
-            <a-gltf-model 
-                src="#model" 
-                position="0 0 0" 
-                scale="0.3 0.3 0.3" 
-                rotation="0 180 0"
-                visible="false"
-                id="model-entity"
-            ></a-gltf-model>
-            <a-plane 
-                src="#target-image"
-                width="1.5"
-                height="1.5"
-                position="0 0 0.1"
-                visible="false"
-                id="target-preview"
-            ></a-plane>
-        </a-entity>
-    </a-scene>
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-gltf-model 
+        id="model-entity"
+        src="#model"
+        position="0 0 0"
+        scale="0.3 0.3 0.3"
+        rotation="0 180 0"
+        animation-mixer
+        visible="false"
+      ></a-gltf-model>
+    </a-entity>
+  </a-scene>
 
-    <script>
-        const statusEl = document.getElementById('status');
-        const detectionStatus = document.getElementById('detection-status');
-        const loadingMessage = document.getElementById('loading-message');
-        const modelEntity = document.getElementById('model-entity');
-        const targetPreview = document.getElementById('target-preview');
+  <script>
+    const statusEl = document.getElementById('status');
+    const detectionStatus = document.getElementById('detection-status');
+    const loadingMessage = document.getElementById('loading-message');
+    const modelEntity = document.getElementById('model-entity');
 
-        let arSystem;
-        let isModelLoaded = false;
+    let arSystem;
 
-        document.querySelector('a-scene').addEventListener('loaded', function() {
-            statusEl.textContent = "Sistema AR listo";
-            loadingMessage.style.display = 'none';
-            targetPreview.setAttribute('visible', 'true');
-            setTimeout(startAR, 500);
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      statusEl.textContent = "Sistema AR listo";
+      loadingMessage.style.display = 'none';
+      setTimeout(startAR, 500);
+    });
+
+    document.querySelector('a-asset-item[id="model"]').addEventListener('loaded', () => {
+      modelEntity.setAttribute('visible', 'true');
+    });
+
+    async function startAR() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
         });
 
-        document.querySelector('a-asset-item[id="model"]').addEventListener('loaded', function() {
-            isModelLoaded = true;
-            modelEntity.setAttribute('visible', 'true');
-            targetPreview.setAttribute('visible', 'false');
-        });
+        stream.getTracks().forEach(track => track.stop());
 
-        async function startAR() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    } 
-                });
-                stream.getTracks().forEach(track => track.stop());
-                arSystem = document.querySelector('a-scene').systems['mindar-image-system'];
-                arSystem.start();
-                setInterval(updateDetectionStatus, 500);
-            } catch (error) {
-                console.error("Error al iniciar AR:", error);
-                statusEl.textContent = "Error: " + error.message;
-            }
+        arSystem = document.querySelector('a-scene').systems['mindar-image-system'];
+        arSystem.start();
+
+        setInterval(updateDetectionStatus, 500);
+      } catch (error) {
+        console.error("Error al iniciar AR:", error);
+        statusEl.textContent = "Error: " + error.message;
+      }
+    }
+
+    function updateDetectionStatus() {
+      const scene = document.querySelector('a-scene');
+      const mindarSystem = scene.systems['mindar-image-system'];
+      const targets = mindarSystem.targets;
+
+      if (targets && targets[0]) {
+        const target = targets[0];
+        if (target.visible) {
+          detectionStatus.textContent = "Marcador detectado!";
+          detectionStatus.style.color = "lightgreen";
+        } else {
+          detectionStatus.textContent = "Apunta al cartel...";
+          detectionStatus.style.color = "yellow";
         }
-
-        function updateDetectionStatus() {
-            const scene = document.querySelector('a-scene');
-            const mindarSystem = scene.systems['mindar-image-system'];
-            const targets = mindarSystem.targets;
-            
-            if (targets && targets[0]) {
-                const target = targets[0];
-                if (target.visible) {
-                    detectionStatus.textContent = "✅ Marcador detectado!";
-                    detectionStatus.style.color = "lightgreen";
-                } else {
-                    detectionStatus.textContent = "🔍 Apunta al cartel...";
-                    detectionStatus.style.color = "yellow";
-                }
-            }
-        }
-
-        setTimeout(() => {
-            if (detectionStatus.textContent.includes("No se detecta")) {
-                detectionStatus.innerHTML = `
-                    ❗ No se detecta marcador. Verifica:<br>
-                    1. Que apuntas al cartel correcto<br>
-                    2. Buena iluminación<br>
-                    3. Cámara enfocando bien
-                `;
-            }
-        }, 15000);
-    </script>
+      }
+    }
+  </script>
 </body>
 </html>
 
