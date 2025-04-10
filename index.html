@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Paletería Nevería - Realidad Aumentada</title>
-    
+
     <!-- Cargar las librerías MindAR y Three.js -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.133.0/build/three.min.js"></script>
-    
+
     <style>
         html, body {
             position: relative;
@@ -36,87 +36,83 @@
 </head>
 <body>
     <div id="loading">Cargando, por favor espere...</div>
-    
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const start = async () => {
                 // Inicializar MindAR
-                const mindarThree = new MindARThree({
+                const mindarThree = new window.MINDAR.IMAGE.MindARThree({
                     container: document.body,
                     imageTargetSrc: "./assets/paleterianeveria.mind",
-                    uiLoading: "#loading",
-                    uiScanning: "Busca el marcador con la cámara...",
-                    uiError: "¡Error! Recarga la página",
                 });
-                
-                const {renderer, scene, camera} = mindarThree;
-                
+
+                const { renderer, scene, camera } = mindarThree;
+
                 // Crear un anchor para el marcador
                 const anchor = mindarThree.addAnchor(0);
-                
-                // Crear texto 3D cuando se encuentre el marcador
-                // Cargar la fuente para el texto 3D
+
+                // Cargar fuente para el texto 3D
                 const loader = new THREE.FontLoader();
-                
+
                 loader.load(
                     "https://cdn.jsdelivr.net/npm/three@0.133.0/examples/fonts/helvetiker_bold.typeface.json",
                     function(font) {
-                        // Crear geometría de texto 3D
-                        const textGeometry = new THREE.TextGeometry("desde 1950\ncreando dulces historias", {
-                            font: font,
-                            size: 0.1,
-                            height: 0.02,
-                            curveSegments: 5,
-                            bevelEnabled: true,
-                            bevelThickness: 0.005,
-                            bevelSize: 0.002,
-                            bevelOffset: 0,
-                            bevelSegments: 3
-                        });
-                        
-                        // Centrar el texto
-                        textGeometry.computeBoundingBox();
-                        const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-                        textGeometry.translate(-textWidth / 2, 0, 0);
-                        
-                        // Material para el texto
-                        const textMaterial = new THREE.MeshStandardMaterial({
-                            color: 0xFF5500,
+                        const material = new THREE.MeshStandardMaterial({
+                            color: 0xff5500,
                             metalness: 0.3,
                             roughness: 0.4
                         });
-                        
-                        // Crear el mesh con el texto
-                        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-                        textMesh.rotation.x = -Math.PI / 2; // Rotar para que sea visible desde arriba
-                        
-                        // Añadir luces para ver el texto 3D correctamente
+
+                        const group = new THREE.Group();
+
+                        const createText = (text, yOffset) => {
+                            const geometry = new THREE.TextGeometry(text, {
+                                font: font,
+                                size: 0.1,
+                                height: 0.02,
+                                bevelEnabled: true,
+                                bevelThickness: 0.005,
+                                bevelSize: 0.002,
+                                bevelSegments: 3
+                            });
+                            geometry.computeBoundingBox();
+                            const xOffset = (geometry.boundingBox.max.x - geometry.boundingBox.min.x) / 2;
+                            geometry.translate(-xOffset, 0, 0);
+
+                            const mesh = new THREE.Mesh(geometry, material);
+                            mesh.position.set(0, yOffset, 0);
+                            group.add(mesh);
+                        };
+
+                        createText("Desde 1950", 0.15);
+                        createText("creando", 0);
+                        createText("dulces historias", -0.15);
+
+                        group.rotation.x = -Math.PI / 2;
+
+                        // Luces
                         const light = new THREE.DirectionalLight(0xffffff, 1.0);
                         light.position.set(0, 0, 1);
                         anchor.group.add(light);
-                        
+
                         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
                         anchor.group.add(ambientLight);
-                        
-                        // Añadir el texto al anchor
-                        anchor.group.add(textMesh);
-                        
+
+                        anchor.group.add(group);
                         console.log("Texto 3D añadido al marcador");
                     }
                 );
-                
-                // Iniciar la experiencia de AR
+
+                // Iniciar la experiencia AR
                 await mindarThree.start();
-                
-                // Quitar la pantalla de carga cuando todo esté listo
+
                 document.getElementById("loading").style.display = "none";
-                
-                // Bucle de renderizado
+
                 renderer.setAnimationLoop(() => {
                     renderer.render(scene, camera);
                 });
             };
-            
+
             start();
         });
     </script>
