@@ -1,132 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Experiencia AR para Paletería AR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paletería AR</title>
-
-    <!-- A-Frame y MindAR -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
-
     <style>
-      body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        font-family: Arial, sans-serif;
-        background-color: #000;
-      }
-      #ar-container {
-        width: 100vw;
-        height: 100vh;
-        position: relative;
-      }
-      #loading-message, #permission-message {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        background-color: rgba(0,0,0,0.7);
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        max-width: 80%;
-        z-index: 1000;
-      }
-      #start-button {
-        background-color: #FF5733;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        margin-top: 15px;
-        border-radius: 5px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-      .hidden {
-        display: none;
-      }
+        body { margin: 0; overflow: hidden; }
+        #start-screen {
+            position: absolute; 
+            width: 100%; height: 100%;
+            background: #000; color: white;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 1000;
+            text-align: center;
+            padding: 20px;
+        }
+        #start-button {
+            background: #FF5733; color: white;
+            border: none; padding: 15px 30px;
+            font-size: 18px; margin-top: 20px;
+            cursor: pointer;
+        }
+        .hidden { display: none; }
     </style>
-  </head>
-
-  <body>
-    <div id="ar-container">
-      <div id="loading-message">Cargando experiencia AR...</div>
-      <div id="permission-message" class="hidden">
-        <p>Para disfrutar de la experiencia AR, necesitamos acceso a tu cámara.</p>
-        <button id="start-button">IniciAR Experiencia</button>
-      </div>
-      
-      <a-scene
-        id="ar-scene"
-        mindar-image="imageTargetSrc: ./assets/paleterianeveria.mind; autoStart: false;"
-        color-space="sRGB"
-        embedded
-        renderer="colorManagement: true, logarithmicDepthBuffer: true"
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false"
-      >
-        <a-assets>
-          <a-asset-item id="modelo" src="./assets/Capoeira.glb"></a-asset-item>
-        </a-assets>
-
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-        <a-entity mindar-image-target="targetIndex: 0">
-          <a-gltf-model
-            src="#modelo"
-            position="0 -0.2 0"
-            scale="0.3 0.3 0.3"
-            rotation="0 180 0"
-            animation-mixer
-          ></a-gltf-model>
-
-          <a-text
-            value="Desde 1950 creando dulces historias"
-            align="center"
-            position="0 0.7 0"
-            color="#FF5733"
-            width="2.5"
-          ></a-text>
-        </a-entity>
-      </a-scene>
+</head>
+<body>
+    <div id="start-screen">
+        <h2>Experiencia AR Paletería</h2>
+        <p>Necesitamos acceso a tu cámara</p>
+        <button id="start-button">COMENZAR</button>
     </div>
+    
+    <a-scene id="ar-scene" mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: false;" vr-mode-ui="enabled: false">
+        <a-assets>
+            <a-asset-item id="model" src="assets/Capoeira.glb"></a-asset-item>
+        </a-assets>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-entity mindar-image-target="targetIndex: 0">
+            <a-gltf-model src="#model" position="0 0 0" scale="0.3 0.3 0.3" rotation="0 180 0"></a-gltf-model>
+            <a-text value="Desde 1950" position="0 0.7 0" color="#FF5733" width="4"></a-text>
+        </a-entity>
+    </a-scene>
 
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const scene = document.getElementById('ar-scene');
-        const loadingMessage = document.getElementById('loading-message');
-        const permissionMessage = document.getElementById('permission-message');
-        const startButton = document.getElementById('start-button');
-        
-        // Simular carga
-        setTimeout(function() {
-          loadingMessage.classList.add('hidden');
-          permissionMessage.classList.remove('hidden');
-        }, 3000);
-        
-        // Botón de inicio
-        startButton.addEventListener('click', function() {
-          permissionMessage.classList.add('hidden');
-          const arSystem = scene.systems["mindar-image-system"];
-          arSystem.start();
-
-          // Solicitar permiso de cámara
-          navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function(stream) {
-              arSystem.start();
-              stream.getTracks().forEach(track => track.stop());
-            })
-            .catch(function(error) {
-              console.error("Error al acceder a la cámara:", error);
-              permissionMessage.innerHTML = "<p>Debes permitir el acceso a la cámara para usar AR.</p>";
-              permissionMessage.classList.remove('hidden');
-            });
+        document.getElementById('start-button').addEventListener('click', function() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    stream.getTracks().forEach(track => track.stop());
+                    document.getElementById('start-screen').classList.add('hidden');
+                    const scene = document.getElementById('ar-scene');
+                    const arSystem = scene.systems["mindar-image-system"];
+                    arSystem.start();
+                })
+                .catch(err => {
+                    alert("Debes permitir el acceso a la cámara");
+                    console.error(err);
+                });
         });
-      });
     </script>
-  </body>
+</body>
 </html>
