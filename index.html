@@ -8,17 +8,18 @@
     <style>
         body { margin: 0; overflow: hidden; }
         .arjs-loader {
-            height: 100%;
-            width: 100%;
             position: absolute;
             top: 0;
             left: 0;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 9999;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
             display: flex;
             justify-content: center;
             align-items: center;
             color: white;
+            font-family: Arial;
+            z-index: 100;
         }
     </style>
 </head>
@@ -27,7 +28,6 @@
         <p>Enfoca el marcador con tu cámara...</p>
     </div>
 
-    <!-- Escena AR optimizada -->
     <a-scene 
         vr-mode-ui="enabled: false"
         embedded
@@ -35,53 +35,61 @@
             sourceType: webcam;
             detectionMode: mono_and_matrix;
             matrixCodeType: 3x3;
-            debugUIEnabled: false;
+            debugUIEnabled: true;  <!-- Activamos modo debug para ver mensajes -->
         "
         renderer="logarithmicDepthBuffer: true;"
     >
-        <!-- Marcador personalizado (.mind) -->
+        <!-- Marcador con tamaño explícito y parámetros optimizados -->
         <a-marker 
             type="pattern" 
             preset="custom" 
             url="assets/paleterianeveria.mind"
+            size="0.2"  <!-- Tamaño en metros -->
+            raycaster="objects: [clickable]"
             emitevents="true"
-            cursor="rayOrigin: mouse"
         >
-            <!-- Texto 3D con sombra y mejor legibilidad -->
-            <a-entity position="0 1.5 0">
-                <a-text 
-                    value="Desde 1950 creando dulces historias" 
-                    color="#FF3366" 
-                    align="center" 
-                    width="5"
-                    font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
-                    shader="standard"
-                    position="0 0 0"
-                ></a-text>
-                <!-- Sombra para mejor contraste -->
-                <a-plane 
-                    position="0 -0.2 0" 
-                    width="5.5" 
-                    height="0.8" 
-                    color="#000" 
-                    opacity="0.4"
-                    rotation="-90 0 0"
-                ></a-plane>
-            </a-entity>
+            <!-- Texto con propiedades mejoradas -->
+            <a-text 
+                value="Desde 1950 creando dulces historias"
+                position="0 0.2 0"
+                rotation="-90 0 0"
+                color="#FF3366"
+                align="center"
+                width="1.5"
+                font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
+                shader="standard"
+                side="double"
+            ></a-text>
         </a-marker>
 
-        <!-- Cámara (asegura que esté FUERA del marcador) -->
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        // Ocultar loader cuando se detecte el marcador
+        // Mostrar mensajes en consola para diagnóstico
         const scene = document.querySelector('a-scene');
-        scene.addEventListener('markerFound', () => {
+        
+        scene.addEventListener('loaded', () => {
+            console.log('Escena cargada');
+        });
+
+        scene.addEventListener('markerFound', (e) => {
+            console.log('Marcador detectado', e.detail);
             document.querySelector('.arjs-loader').style.display = 'none';
         });
+
         scene.addEventListener('markerLost', () => {
+            console.log('Marcador perdido');
             document.querySelector('.arjs-loader').style.display = 'flex';
+        });
+
+        // Verificar si el marcador se está cargando
+        const marker = document.querySelector('a-marker');
+        marker.addEventListener('loaded', () => {
+            console.log('Marcador cargado correctamente');
+        });
+        marker.addEventListener('error', () => {
+            console.error('Error al cargar el marcador');
         });
     </script>
 </body>
