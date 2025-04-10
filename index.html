@@ -3,188 +3,230 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Paletería Inguarán AR</title>
   
-  <!-- Librerías con protocolo correcto -->
+  <!-- Preconexión para mejorar carga -->
+  <link rel="preconnect" href="https://aframe.io">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+  <!-- Librerías con fallback -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    body {
+    * {
       margin: 0;
       padding: 0;
-      overflow: hidden;
-      background: #000;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
       position: fixed;
       width: 100%;
       height: 100%;
+      overflow: hidden;
+      background: #000;
       touch-action: none;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    #loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      color: white;
     }
     
     #loading-message {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.8);
-      color: white;
-      padding: 20px;
-      border-radius: 10px;
       text-align: center;
-      font-family: 'Arial', sans-serif;
-      z-index: 10000;
-      width: 80%;
-      max-width: 300px;
+      margin: 20px;
+      max-width: 80%;
     }
     
-    /* Fuerza el canvas a ocupar toda la pantalla */
+    #retry-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #FF0066;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 16px;
+      display: none;
+      cursor: pointer;
+    }
+    
     a-scene {
-      position: absolute !important;
+      position: absolute;
       width: 100% !important;
       height: 100% !important;
       top: 0 !important;
       left: 0 !important;
     }
     
-    /* Oculta el loader nativo de MindAR */
-    .arjs-loader {
-      display: none !important;
+    /* Asegura que el canvas ocupe toda la pantalla */
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100% !important;
+      height: 100% !important;
     }
   </style>
 </head>
 <body>
 
-  <div id="loading-message">Escaneando marcador de Paletería Inguarán...</div>
+  <div id="loading-container">
+    <div id="loading-message">Inicializando realidad aumentada...</div>
+    <button id="retry-button">Reintentar</button>
+  </div>
 
   <a-scene
     mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
-    renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true; precision: high;"
+    renderer="antialias: true; alpha: false; logarithmicDepthBuffer: false; precision: medium;"
   >
     <a-assets>
-      <!-- Fuente optimizada para AR -->
-      <a-asset-item id="robotoFont" src="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-asset-item>
-      <img id="fontTexture" src="https://cdn.aframe.io/fonts/Roboto-msdf.png">
+      <!-- Texturas y fuentes locales para mejor rendimiento -->
+      <img id="texture" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HgAGgwJ/lK3Q6wAAAABJRU5ErkJggg==" crossorigin="anonymous">
     </a-assets>
 
-    <!-- Cámara configurada correctamente -->
+    <!-- Cámara optimizada -->
     <a-camera 
       position="0 0 0" 
       look-controls="enabled: false"
+      wasd-controls="enabled: false"
       active="true"
     ></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
-      <!-- Texto 3D principal con extrusión -->
-      <a-entity position="0 0.5 0">
-        <a-text
-          value="PALETERÍA Y NEVERÍA INGUARÁN"
-          align="center"
-          width="5"
-          color="#FF0066"
-          font="#robotoFont"
-          shader="msdf"
-          negate="false"
-          opacity="1"
-          position="0 0 0.1"
-        ></a-text>
-        
-        <!-- Efecto 3D real mediante extrusión -->
+      <!-- Texto principal como geometría 3D -->
+      <a-entity position="0 0.5 0" rotation="0 0 0">
         <a-entity
-          text="value: PALETERÍA Y NEVERÍA INGUARÁN; align: center; width: 5; color: #990033; font: #robotoFont"
-          position="0 0 0"
-          geometry="primitive: plane; height: auto; width: auto"
-          material="side: double; transparent: true; opacity: 0.8"
+          geometry="primitive: plane; height: 0.3; width: 2"
+          material="color: #FF0066; shader: flat; src: #texture"
+          text="value: PALETERÍA Y NEVERÍA INGUARÁN; align: center; width: 2; color: white; font: roboto; wrapCount: 20"
+        ></a-entity>
+        
+        <!-- Efecto 3D con offset -->
+        <a-entity
+          geometry="primitive: plane; height: 0.3; width: 2"
+          material="color: #990033; shader: flat; opacity: 0.8"
+          position="0 0 -0.05"
         ></a-entity>
       </a-entity>
 
-      <!-- Texto secundario con sombra -->
+      <!-- Texto secundario -->
       <a-entity position="0 -0.2 0">
-        <a-text
-          value="CREANDO HISTORIAS DESDE 1950"
-          align="center"
-          width="4"
-          color="#00CCFF"
-          font="#robotoFont"
-          shader="msdf"
-          position="0 0 0.05"
-        ></a-text>
-        
-        <a-text
-          value="CREANDO HISTORIAS DESDE 1950"
-          align="center"
-          width="4"
-          color="#000000"
-          font="#robotoFont"
-          shader="msdf"
-          position="0.02 -0.02 0"
-          opacity="0.3"
-        ></a-text>
+        <a-entity
+          geometry="primitive: plane; height: 0.2; width: 1.8"
+          material="color: #00CCFF; shader: flat"
+          text="value: CREANDO HISTORIAS DESDE 1950; align: center; width: 1.8; color: white; font: roboto; wrapCount: 25"
+        ></a-entity>
       </a-entity>
 
-      <!-- Iluminación para mejor visualización -->
-      <a-light type="ambient" intensity="0.6"></a-light>
-      <a-light type="directional" intensity="0.8" position="-1 1 1"></a-light>
+      <!-- Iluminación básica -->
+      <a-light type="ambient" color="#FFFFFF" intensity="0.6"></a-light>
+      <a-light type="directional" color="#FFFFFF" intensity="0.5" position="0 1 1"></a-light>
     </a-entity>
   </a-scene>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const loading = document.getElementById('loading-message');
+      const loadingContainer = document.getElementById('loading-container');
+      const loadingMessage = document.getElementById('loading-message');
+      const retryButton = document.getElementById('retry-button');
       const scene = document.querySelector('a-scene');
       
-      // Solución para problema de media pantalla
-      function resizeAR() {
-        const renderer = scene.renderer;
-        const canvas = renderer.domElement;
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
-        canvas.width = width;
-        canvas.height = height;
-        
-        renderer.setSize(width, height);
-        renderer.setPixelRatio(window.devicePixelRatio);
-      }
+      // Solución para problemas de caché y modo incógnito
+      const clearARCache = () => {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => registration.unregister());
+          });
+        }
+        caches.keys().then(cacheNames => {
+          cacheNames.forEach(cacheName => caches.delete(cacheName));
+        });
+      };
       
-      // Configurar eventos
-      window.addEventListener('resize', resizeAR);
-      scene.addEventListener('renderstart', resizeAR);
+      // Configurar reintento
+      retryButton.addEventListener('click', () => {
+        loadingMessage.textContent = "Reiniciando experiencia AR...";
+        retryButton.style.display = 'none';
+        clearARCache();
+        setTimeout(() => window.location.reload(true), 500);
+      });
       
       // Verificar compatibilidad
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        loading.textContent = 'AR no soportado. Usa Chrome en móvil.';
-        return;
-      }
+      const checkCompatibility = () => {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isChrome = /Chrome/.test(navigator.userAgent);
+        
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          loadingMessage.innerHTML = "Tu navegador no soporta AR.<br>Usa Chrome en Android o Safari en iOS.";
+          retryButton.style.display = 'block';
+          return false;
+        }
+        
+        if (isIOS && !isChrome) {
+          loadingMessage.innerHTML = "Para mejor rendimiento en iOS:<br>1. Usa Safari<br>2. Ve a Ajustes > Safari<br>3. Activa 'Solicitar acceso a escritorio'";
+          retryButton.style.display = 'block';
+        }
+        
+        return true;
+      };
       
-      // Manejo de carga
-      scene.addEventListener('loaded', () => {
+      // Inicialización AR
+      const initAR = () => {
+        if (!checkCompatibility()) return;
+        
+        // Forzar modo mono si es necesario
+        const arSystem = scene.systems['mindar-image-system'];
+        if (arSystem) {
+          arSystem.forceMono = true;
+          arSystem.maxTrack = 1;
+        }
+        
+        // Asegurar que el texto sea visible
         setTimeout(() => {
-          loading.style.display = 'none';
-          
-          // Animación de aparición
-          const texts = scene.querySelectorAll('a-text, a-entity[text]');
-          texts.forEach((text, index) => {
-            text.setAttribute('animation', {
-              property: 'scale',
-              from: '0 0 0',
-              to: '1 1 1',
-              dur: 800,
-              delay: index * 200,
-              easing: 'easeOutElastic'
-            });
+          const texts = scene.querySelectorAll('[text]');
+          texts.forEach(text => {
+            text.setAttribute('material', 'opacity', 1);
+            text.setAttribute('visible', 'true');
           });
+        }, 2000);
+      };
+      
+      // Manejo de eventos
+      scene.addEventListener('loaded', () => {
+        loadingMessage.textContent = "Escaneando marcador...";
+        setTimeout(() => {
+          loadingContainer.style.display = 'none';
+          initAR();
         }, 1500);
       });
       
-      // Manejo de errores
       scene.addEventListener('error', (e) => {
         console.error('AR Error:', e);
-        loading.textContent = 'Error: ' + (e.detail || 'Revisa la consola');
+        loadingMessage.innerHTML = "Error al iniciar AR.<br>Asegúrate de dar permisos a la cámara.";
+        retryButton.style.display = 'block';
       });
+      
+      // Iniciar limpieza de caché
+      clearARCache();
+      initAR();
     });
   </script>
 </body>
