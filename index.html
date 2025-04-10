@@ -2,11 +2,20 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paletería Nevería AR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Paletería Nevería - Realidad Aumentada</title>
+    
+    <!-- Cargar las librerías MindAR y Three.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.133.0/build/three.min.js"></script>
+    
     <style>
-        body {
+        html, body {
+            position: relative;
             margin: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
         }
         #loading {
@@ -15,116 +24,99 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-        }
-        #instructions {
-            position: fixed;
-            bottom: 20px;
-            width: 100%;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             color: white;
-            padding: 10px 0;
-            z-index: 10;
+            z-index: 1000;
+            font-family: Arial, sans-serif;
         }
     </style>
-    <!-- Carga de las librerías necesarias -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mind-ar/1.2.0/mindar-image.prod.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mind-ar/1.2.0/mindar-image-three.prod.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js"></script>
 </head>
 <body>
-    <div id="loading">Cargando, por favor espera...</div>
-    <div id="instructions">Apunta la cámara hacia el marcador</div>
-
+    <div id="loading">Cargando, por favor espere...</div>
+    
     <script>
-        const start = async () => {
-            // Ocultar mensaje de carga cuando todo esté listo
-            const loading = document.getElementById('loading');
-            const instructions = document.getElementById('instructions');
-
-            // Inicializar MindAR
-            const mindarThree = new MindARThree({
-                container: document.body,
-                imageTargetSrc: './assets/paleterianeveria.mind',
-            });
-            
-            const { renderer, scene, camera } = mindarThree;
-
-            // Crear anchor (punto de anclaje) para el target
-            const anchor = mindarThree.addAnchor(0);
-
-            // Crear texto 3D
-            const fontLoader = new THREE.FontLoader();
-            
-            fontLoader.load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/fonts/helvetiker_bold.typeface.json', function(font) {
-                const textGeo = new THREE.TextGeometry('desde 1950\ncreando dulces historias', {
-                    font: font,
-                    size: 0.1,
-                    height: 0.02,
-                    curveSegments: 4,
-                    bevelEnabled: true,
-                    bevelThickness: 0.01,
-                    bevelSize: 0.005
+        document.addEventListener("DOMContentLoaded", function() {
+            const start = async () => {
+                // Inicializar MindAR
+                const mindarThree = new MindARThree({
+                    container: document.body,
+                    imageTargetSrc: "./assets/paleterianeveria.mind",
+                    uiLoading: "#loading",
+                    uiScanning: "Busca el marcador con la cámara...",
+                    uiError: "¡Error! Recarga la página",
                 });
                 
-                // Centrar el texto
-                textGeo.computeBoundingBox();
-                const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
+                const {renderer, scene, camera} = mindarThree;
                 
-                // Material para el texto
-                const material = new THREE.MeshStandardMaterial({
-                    color: 0xFF5500,
-                    metalness: 0.3,
-                    roughness: 0.4
+                // Crear un anchor para el marcador
+                const anchor = mindarThree.addAnchor(0);
+                
+                // Crear texto 3D cuando se encuentre el marcador
+                // Cargar la fuente para el texto 3D
+                const loader = new THREE.FontLoader();
+                
+                loader.load(
+                    "https://cdn.jsdelivr.net/npm/three@0.133.0/examples/fonts/helvetiker_bold.typeface.json",
+                    function(font) {
+                        // Crear geometría de texto 3D
+                        const textGeometry = new THREE.TextGeometry("desde 1950\ncreando dulces historias", {
+                            font: font,
+                            size: 0.1,
+                            height: 0.02,
+                            curveSegments: 5,
+                            bevelEnabled: true,
+                            bevelThickness: 0.005,
+                            bevelSize: 0.002,
+                            bevelOffset: 0,
+                            bevelSegments: 3
+                        });
+                        
+                        // Centrar el texto
+                        textGeometry.computeBoundingBox();
+                        const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+                        textGeometry.translate(-textWidth / 2, 0, 0);
+                        
+                        // Material para el texto
+                        const textMaterial = new THREE.MeshStandardMaterial({
+                            color: 0xFF5500,
+                            metalness: 0.3,
+                            roughness: 0.4
+                        });
+                        
+                        // Crear el mesh con el texto
+                        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                        textMesh.rotation.x = -Math.PI / 2; // Rotar para que sea visible desde arriba
+                        
+                        // Añadir luces para ver el texto 3D correctamente
+                        const light = new THREE.DirectionalLight(0xffffff, 1.0);
+                        light.position.set(0, 0, 1);
+                        anchor.group.add(light);
+                        
+                        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                        anchor.group.add(ambientLight);
+                        
+                        // Añadir el texto al anchor
+                        anchor.group.add(textMesh);
+                        
+                        console.log("Texto 3D añadido al marcador");
+                    }
+                );
+                
+                // Iniciar la experiencia de AR
+                await mindarThree.start();
+                
+                // Quitar la pantalla de carga cuando todo esté listo
+                document.getElementById("loading").style.display = "none";
+                
+                // Bucle de renderizado
+                renderer.setAnimationLoop(() => {
+                    renderer.render(scene, camera);
                 });
-                
-                const textMesh = new THREE.Mesh(textGeo, material);
-                textMesh.position.x = centerOffset;
-                textMesh.position.y = 0;
-                textMesh.position.z = 0;
-                
-                // Añadir luces
-                const light = new THREE.DirectionalLight(0xffffff, 1);
-                light.position.set(0, 0, 1);
-                scene.add(light);
-                
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-                scene.add(ambientLight);
-                
-                // Añadir el texto al anchor
-                anchor.group.add(textMesh);
-                
-                // Eventos del target
-                anchor.onTargetFound = () => {
-                    console.log("Target encontrado");
-                    instructions.style.display = "none";
-                };
-                
-                anchor.onTargetLost = () => {
-                    console.log("Target perdido");
-                    instructions.style.display = "block";
-                };
-                
-                // Ocultar pantalla de carga
-                loading.style.display = "none";
-            });
+            };
             
-            // Iniciar experiencia AR
-            await mindarThree.start();
-            
-            // Loop de renderizado
-            renderer.setAnimationLoop(() => {
-                renderer.render(scene, camera);
-            });
-        };
-        
-        window.addEventListener('DOMContentLoaded', () => {
             start();
         });
     </script>
