@@ -27,6 +27,9 @@
       text-align: center;
       z-index: 9999;
     }
+    .arjs-loader {
+      display: none; /* Ocultamos el loader por defecto ya que tenemos el nuestro */
+    }
   </style>
 </head>
 <body>
@@ -34,15 +37,16 @@
   <div id="loading-message">Cargando experiencia AR...</div>
 
   <a-scene
-    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true"
+    mindar-image="imageTargetSrc: assets/paleterianeveria.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
     color-space="sRGB"
     embedded
     renderer="colorManagement: true; logarithmicDepthBuffer: true;"
     vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: true"
+    device-orientation-permission-ui="enabled: false"
   >
     <a-assets>
       <a-asset-item id="modelo" src="assets/Capoeira.glb"></a-asset-item>
+      <img id="textura" src="assets/texture.jpg" crossorigin="anonymous" />
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -53,7 +57,7 @@
         position="0 -0.2 0"
         scale="0.3 0.3 0.3"
         rotation="0 0 0"
-        animation-mixer
+        animation-mixer="clip: *;"
       ></a-gltf-model>
 
       <a-text
@@ -62,20 +66,43 @@
         position="0 0.7 0"
         color="#FF5733"
         width="2.5"
+        shader="msdf"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
       ></a-text>
     </a-entity>
   </a-scene>
 
   <script>
-    window.addEventListener("load", () => {
-      const loading = document.getElementById("loading-message");
-      document.querySelector("a-scene").addEventListener("loaded", () => {
-        loading.style.display = "none";
+    document.addEventListener('DOMContentLoaded', () => {
+      const loading = document.getElementById('loading-message');
+      const scene = document.querySelector('a-scene');
+      
+      // Manejar errores de carga
+      scene.addEventListener('error', (e) => {
+        loading.textContent = 'Error al cargar la experiencia AR. Por favor recarga la página.';
+        console.error('Error en la escena AR:', e.detail);
+      });
+      
+      // Ocultar loader cuando todo esté listo
+      scene.addEventListener('loaded', () => {
+        setTimeout(() => {
+          loading.style.display = 'none';
+        }, 500); // Pequeño delay para asegurar que todo está listo
+      });
+      
+      // Mostrar mensaje si la carga tarda demasiado
+      const loadingTimeout = setTimeout(() => {
+        if (loading.style.display !== 'none') {
+          loading.textContent = 'La carga está tardando más de lo esperado. Por favor verifica tu conexión a internet.';
+        }
+      }, 10000);
+      
+      // Limpiar timeout cuando la escena cargue
+      scene.addEventListener('loaded', () => {
+        clearTimeout(loadingTimeout);
       });
     });
   </script>
-
 </body>
 </html>
-
 
