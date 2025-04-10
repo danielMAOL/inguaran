@@ -2,14 +2,11 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Paletería Nevería - Realidad Aumentada</title>
+    <title>Paletería Nevería - AR</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
+        body { margin: 0; overflow: hidden; }
         .arjs-loader {
             height: 100%;
             width: 100%;
@@ -22,20 +19,24 @@
             justify-content: center;
             align-items: center;
             color: white;
-            font-family: Arial, sans-serif;
         }
     </style>
 </head>
 <body>
     <div class="arjs-loader">
-        <div>Cargando AR... Enfoca el marcador con tu cámara.</div>
+        <p>Enfoca el marcador con tu cámara...</p>
     </div>
 
-    <!-- Escena AR con cámara en vivo -->
+    <!-- Escena AR optimizada -->
     <a-scene 
-        vr-mode-ui="enabled: false" 
-        embedded 
-        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
+        vr-mode-ui="enabled: false"
+        embedded
+        arjs="
+            sourceType: webcam;
+            detectionMode: mono_and_matrix;
+            matrixCodeType: 3x3;
+            debugUIEnabled: false;
+        "
         renderer="logarithmicDepthBuffer: true;"
     >
         <!-- Marcador personalizado (.mind) -->
@@ -43,39 +44,44 @@
             type="pattern" 
             preset="custom" 
             url="assets/paleterianeveria.mind"
+            emitevents="true"
+            cursor="rayOrigin: mouse"
         >
-            <!-- Texto 3D flotante -->
-            <a-text 
-                value="Desde 1950 creando dulces historias" 
-                position="0 1.5 0" 
-                rotation="-30 0 0" 
-                color="#FF3366" 
-                align="center" 
-                width="5"
-                font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
-                shader="standard"
-            >
-                <!-- Animación de rotación suave -->
-                <a-animation 
-                    attribute="rotation" 
-                    to="-30 360 0" 
-                    dur="15000" 
-                    easing="linear" 
-                    repeat="indefinite"
-                ></a-animation>
-            </a-text>
+            <!-- Texto 3D con sombra y mejor legibilidad -->
+            <a-entity position="0 1.5 0">
+                <a-text 
+                    value="Desde 1950 creando dulces historias" 
+                    color="#FF3366" 
+                    align="center" 
+                    width="5"
+                    font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
+                    shader="standard"
+                    position="0 0 0"
+                ></a-text>
+                <!-- Sombra para mejor contraste -->
+                <a-plane 
+                    position="0 -0.2 0" 
+                    width="5.5" 
+                    height="0.8" 
+                    color="#000" 
+                    opacity="0.4"
+                    rotation="-90 0 0"
+                ></a-plane>
+            </a-entity>
         </a-marker>
 
-        <!-- Cámara AR (importante para el fondo en vivo) -->
+        <!-- Cámara (asegura que esté FUERA del marcador) -->
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        // Ocultar loader cuando la escena esté lista
-        document.querySelector('a-scene').addEventListener('loaded', function() {
-            setTimeout(() => {
-                document.querySelector('.arjs-loader').style.display = 'none';
-            }, 1500);
+        // Ocultar loader cuando se detecte el marcador
+        const scene = document.querySelector('a-scene');
+        scene.addEventListener('markerFound', () => {
+            document.querySelector('.arjs-loader').style.display = 'none';
+        });
+        scene.addEventListener('markerLost', () => {
+            document.querySelector('.arjs-loader').style.display = 'flex';
         });
     </script>
 </body>
