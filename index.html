@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beardance con Cámara</title>
+    <title>Beardance AR</title>
     <style>
-        body { 
-            margin: 0; 
-            overflow: hidden; 
+        body {
+            margin: 0;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
         }
         #videoContainer {
             position: absolute;
@@ -18,17 +21,27 @@
         }
         #video {
             position: absolute;
-            min-width: 100%;
-            min-height: 100%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         #canvas3d {
             position: absolute;
             width: 100%;
             height: 100%;
             z-index: 2;
+            pointer-events: none;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 10;
         }
         #startButton {
             position: absolute;
@@ -36,12 +49,14 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 3;
-            padding: 10px 20px;
-            background: rgba(0,0,0,0.5);
+            padding: 12px 24px;
+            background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 25px;
             font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -50,29 +65,30 @@
         <video id="video" playsinline></video>
     </div>
     <canvas id="canvas3d"></canvas>
+    
+    <div id="loading">Cargando modelo...</div>
     <button id="startButton">Activar Cámara</button>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
     
     <script>
-        // Elementos del DOM
-        const video = document.getElementById('video');
-        const canvas3d = document.getElementById('canvas3d');
-        const startButton = document.getElementById('startButton');
+        // Variables globales
+        let scene, camera, renderer, model, mixer, clock;
+        let video = document.getElementById('video');
+        let canvas3d = document.getElementById('canvas3d');
+        let startButton = document.getElementById('startButton');
+        let loading = document.getElementById('loading');
         
-        // Variables Three.js
-        let scene, camera, renderer, model;
+        // 1. Cargar el modelo 3D primero
+        loadModel();
         
-        // Inicializar Three.js
-        function initThreeJS() {
+        function loadModel() {
+            // Inicializar Three.js
             scene = new THREE.Scene();
-            
-            // Cámara Three.js (ajustada para coincidir con perspectiva de cámara real)
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 2;
             
-            // Renderizador
             renderer = new THREE.WebGLRenderer({
                 canvas: canvas3d,
                 alpha: true,
@@ -81,58 +97,50 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             
-            // Cargar modelo 3D
+            // Reloj para animaciones
+            clock = new THREE.Clock();
+            
+            // Cargar modelo GLB
             const loader = new THREE.GLTFLoader();
             loader.load(
                 'beardance.glb',
                 function(gltf) {
                     model = gltf.scene;
+                    
+                    // Ajustar tamaño del modelo
                     model.scale.set(0.5, 0.5, 0.5);
                     scene.add(model);
                     
-                    // Posicionar el modelo
-                    positionModel();
+                    // Configurar animaciones si existen
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        gltf.animations.forEach(clip => {
+                            mixer.clipAction(clip).play();
+                        });
+                        console.log("Animaciones cargadas:", gltf.animations.length);
+                    } else {
+                        console.warn("No se encontraron animaciones en el modelo");
+                    }
+                    
+                    loading.style.display = 'none';
+                    startButton.style.display = 'block';
                 },
                 undefined,
                 function(error) {
                     console.error('Error al cargar el modelo:', error);
+                    loading.textContent = 'Error al cargar el modelo. Verifica la consola.';
                 }
             );
-            
-            // Animación
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                // Rotación automática opcional
-                if (model) {
-                    model.rotation.y += 0.01;
-                }
-                
-                renderer.render(scene, camera);
-            }
-            
-            animate();
         }
         
-        // Posicionar el modelo en la parte inferior
-        function positionModel() {
-            if (!model) return;
-            
-            // Calcular posición basada en el tamaño de la pantalla
-            const box = new THREE.Box3().setFromObject(model);
-            const size = box.getSize(new THREE.Vector3());
-            
-            model.position.y = - (window.innerHeight / window.innerWidth) + size.y/2;
-        }
-        
-        // Iniciar cámara del dispositivo
+        // 2. Activar cámara cuando el usuario haga clic
         startButton.addEventListener('click', async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: {
-                        facingMode: 'user',  // Usar cámara frontal
-                        width: { ideal: window.innerWidth },
-                        height: { ideal: window.innerHeight }
+                        facingMode: 'user',  // 'user' para frontal, 'environment' para trasera
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     },
                     audio: false
                 });
@@ -141,27 +149,48 @@
                 video.play();
                 startButton.style.display = 'none';
                 
-                // Ajustar tamaño del video cuando se cargan los metadatos
-                video.addEventListener('loadedmetadata', () => {
-                    initThreeJS();
-                });
+                // Ajustar el modelo para AR
+                positionModelForAR();
+                
+                // Iniciar bucle de animación
+                animate();
                 
             } catch (err) {
                 console.error("Error al acceder a la cámara:", err);
-                alert("No se pudo acceder a la cámara. Asegúrate de dar los permisos necesarios.");
+                loading.textContent = "Error al acceder a la cámara. Asegúrate de dar los permisos.";
             }
         });
         
-        // Redimensionamiento
-        window.addEventListener('resize', () => {
-            if (camera && renderer) {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                positionModel();
+        function positionModelForAR() {
+            if (!model) return;
+            
+            // Posicionar el modelo en la parte inferior de la pantalla
+            const aspect = window.innerWidth / window.innerHeight;
+            model.position.y = -0.5;
+            model.position.z = -1;
+            
+            // Ajustar tamaño según la pantalla
+            model.scale.set(0.3 * aspect, 0.3 * aspect, 0.3 * aspect);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Actualizar animaciones si existen
+            if (mixer) {
+                mixer.update(clock.getDelta());
             }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Manejar redimensionamiento
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            positionModelForAR();
         });
     </script>
 </body>
 </html>
-
