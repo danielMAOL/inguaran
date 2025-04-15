@@ -52,6 +52,7 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       
       <a-entity mindar-image-target="targetIndex: 0">
+        <!-- OSO -->
         <a-gltf-model
           src="#bearModel"
           position="0 0 0.1"
@@ -59,6 +60,34 @@
           scale="1 1 1"
           animation-mixer
         ></a-gltf-model>
+
+        <!-- TEXTO DE AUTORÍA -->
+        <a-text
+          value="Creado por MAOL"
+          position="0 0.8 0"
+          align="center"
+          color="#ffffff"
+          width="2"
+        ></a-text>
+
+        <!-- BOTÓN -->
+        <a-plane
+          position="0 -0.6 0"
+          width="1"
+          height="0.3"
+          color="#0066ff"
+          class="clickable"
+          onclick="window.open('https://maol.com.mx', '_blank')"
+        ></a-plane>
+
+        <!-- TEXTO ENCIMA DEL BOTÓN -->
+        <a-text
+          value="¡Visítanos!"
+          position="0 -0.6 0.01"
+          align="center"
+          color="#ffffff"
+          width="2"
+        ></a-text>
       </a-entity>
     </a-scene>
     
@@ -67,7 +96,6 @@
         const scene = document.querySelector('a-scene');
         const loading = document.getElementById('loading');
         
-        // Ocultar pantalla de carga cuando la escena esté lista
         scene.addEventListener('loaded', function() {
           console.log("Escena cargada");
         });
@@ -81,7 +109,6 @@
           console.error("Error AR:", event.detail);
         });
         
-        // Inicializar manualmente si es necesario
         setTimeout(function() {
           if (loading.style.display !== 'none') {
             console.log("Forzando inicio de AR...");
@@ -95,3 +122,4 @@
     </script>
   </body>
 </html>
+
