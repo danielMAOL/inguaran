@@ -1,21 +1,44 @@
-<a-scene background="color: #ffffff">
-  <a-assets>
-    <a-asset-item id="oso" src="oso.glb"></a-asset-item>
-  </a-assets>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Oso 3D con cámara móvil</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+  </style>
 
-  <!-- Cámara con look-controls activado -->
-  <a-entity camera look-controls position="0 1.6 0"></a-entity>
+  <!-- Librerías necesarias -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+</head>
+<body>
+  <a-scene background="color: #ffffff">
+    <!-- Modelo cargado -->
+    <a-assets>
+      <a-asset-item id="oso" src="oso.glb"></a-asset-item>
+    </a-assets>
 
-  <!-- Oso en el centro -->
-  <a-entity 
-    gltf-model="#oso" 
-    position="0 1.5 -2" 
-    rotation="0 180 0" 
-    scale="0.5 0.5 0.5" 
-    animation-mixer>
-  </a-entity>
+    <!-- Oso animado centrado y visible -->
+    <a-entity 
+      gltf-model="#oso" 
+      position="0 1.5 -2" 
+      rotation="0 180 0" 
+      scale="0.6 0.6 0.6" 
+      animation-mixer>
+    </a-entity>
 
-  <a-light type="ambient" intensity="1.5"></a-light>
-  <a-light type="directional" intensity="1" position="0 2 2"></a-light>
-</a-scene>
+    <!-- Cámara móvil (gira con el celular) -->
+    <a-entity 
+      id="camara" 
+      camera 
+      look-controls 
+      position="0 1.6 0">
+    </a-entity>
 
+    <!-- Luces -->
+    <a-light type="ambient" intensity="1.2"></a-light>
+    <a-light type="directional" intensity="1" position="1 3 2"></a-light>
+  </a-scene>
+</body>
+</html>
