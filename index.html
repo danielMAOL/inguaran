@@ -2,89 +2,34 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>MindAR con lona.mind</title>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/loaders/GLTFLoader.js"></script>
+    <title>Abrir Cámara</title>
     <style>
-      body, html { margin: 0; padding: 0; overflow: hidden; }
-      #ar-container { width: 100%; height: 100vh; position: relative; }
+      body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+      }
+      video {
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+      }
     </style>
   </head>
   <body>
-    <div id="ar-container"></div>
+    <video id="video" autoplay muted playsinline></video>
 
     <script>
-      // 1. Inicializar MindAR
-      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-        container: document.getElementById("ar-container"),
-        imageTargetSrc: "lona.mind",
-        maxTrack: 1,
-        uiLoading: "yes",
-        uiScanning: "yes",
-        capture: { facingMode: "environment" },
-      });
-      
-      const { renderer, scene, camera } = mindarThree;
-      let mixer = null; // Variable para el control de animaciones
-
-      // 2. Cargar modelo 3D
-      const loader = new THREE.GLTFLoader();
-      loader.load(
-        "oso-bailando.glb",
-        (gltf) => {
-          const model = gltf.scene;
-          
-          // Ajustes del modelo
-          model.scale.set(0.4, 0.4, 0.4);
-          model.rotation.y = Math.PI; // Rotación 180 grados para ajustar orientación
-          
-          // Configurar animaciones
-          if (gltf.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(model);
-            const action = mixer.clipAction(gltf.animations[0]);
-            action.play();
-          }
-
-          // Crear anchor y añadir modelo
-          const anchor = mindarThree.addAnchor(0);
-          anchor.group.add(model);
-        },
-        (progress) => {
-          // Opcional: Mostrar progreso de carga
-          console.log((progress.loaded / progress.total * 100) + '% loaded');
-        },
-        (error) => {
-          console.error("Error al cargar el modelo:", error);
-        }
-      );
-
-      // 3. Configurar actualización de animaciones
-      mindarThree.update = (delta) => {
-        if (mixer) mixer.update(delta * 0.001); // Ajuste de escala de tiempo
-      };
-
-      // 4. Manejo de resize de ventana
-      window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-
-      // 5. Iniciar AR
-      async function startAR() {
-        try {
-          await mindarThree.start();
-          renderer.setAnimationLoop(() => {
-            renderer.render(scene, camera);
-          });
-        } catch (err) {
-          console.error("Error al iniciar AR:", err);
-        }
-      }
-      
-      // Iniciar cuando el documento esté listo
-      document.addEventListener('DOMContentLoaded', startAR);
+      const video = document.getElementById('video');
+      // Se solicita el acceso a la cámara trasera si está disponible.
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then((stream) => {
+          video.srcObject = stream;
+        })
+        .catch((error) => {
+          console.error("Error al acceder a la cámara:", error);
+          alert("No se pudo acceder a la cámara: " + error);
+        });
     </script>
   </body>
 </html>
