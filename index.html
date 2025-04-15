@@ -1,46 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>AR con MindAR</title>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Prueba Cámara</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    video {
+      width: 100%;
+      max-width: 500px;
+      border: 4px solid #00ff88;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <video id="video" autoplay playsinline></video>
 
-    <!-- Estilos para pantalla completa -->
-    <style>
-      body, html {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-      }
-      a-scene {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-      }
-    </style>
-
-    <!-- Librerías necesarias -->
-    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.aframe.js"></script>
-  </head>
-
-  <body>
-    <a-scene
-      mindar-image="imageTargetSrc: ./target.mind;"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false"
-      embedded
-      renderer="colorManagement: true, physicallyCorrectLights"
-    >
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-sphere position="0 0 0" radius="0.25" color="#EF2D5E"></a-sphere>
-      </a-entity>
-    </a-scene>
-  </body>
+  <script>
+    const video = document.getElementById('video');
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        alert("No se pudo acceder a la cámara: " + err);
+        console.error(err);
+      });
+  </script>
+</body>
 </html>
 
