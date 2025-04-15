@@ -2,6 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AR Oso INGUARÁN</title>
     <style>
       body, html {
@@ -10,8 +11,10 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
+        position: fixed;
       }
-      a-scene {
+      .example-container {
+        overflow: hidden;
         position: absolute;
         width: 100%;
         height: 100%;
@@ -22,52 +25,60 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.aframe.js"></script>
+  </head>
+  <body>
+    <div class="example-container">
+      <a-scene
+        mindar-image="imageTargetSrc: ./target.mind; showStats: true; uiScanning: true; uiLoading: true;"
+        embedded
+        color-space="sRGB"
+        renderer="antialias: true; colorManagement: true; precision: high;"
+        vr-mode-ui="enabled: false"
+      >
+        <a-assets>
+          <a-asset-item id="bearModel" src="oso.glb"></a-asset-item>
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        
+        <a-entity mindar-image-target="targetIndex: 0">
+          <a-gltf-model
+            rotation="0 0 0"
+            position="0 -0.2 0"
+            scale="0.5 0.5 0.5"
+            src="#bearModel"
+            animation-mixer
+          ></a-gltf-model>
+        </a-entity>
+      </a-scene>
+    </div>
+
     <script>
-      document.addEventListener("DOMContentLoaded", function() {
+      document.addEventListener('DOMContentLoaded', function() {
+        // Solicitar permisos de cámara explícitamente
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function(stream) {
+            console.log("Permisos de cámara concedidos");
+            // Detener el stream, ya que MindAR manejará la cámara
+            stream.getTracks().forEach(track => {
+              track.stop();
+            });
+          })
+          .catch(function(err) {
+            console.error("Error al acceder a la cámara: ", err);
+            alert("No se pudo acceder a la cámara. Por favor, permite el acceso y recarga la página.");
+          });
+
         const sceneEl = document.querySelector('a-scene');
         
-        // Esperar a que la escena esté lista
-        sceneEl.addEventListener('loaded', function() {
-          console.log('Escena AR cargada');
+        sceneEl.addEventListener('renderstart', function() {
+          console.log('Renderizado AR iniciado');
         });
         
-        // Agregar un evento al arranque de AR
-        sceneEl.addEventListener('arready', function() {
-          console.log('AR iniciado y listo');
-        });
-        
-        // Verificar errores
         sceneEl.addEventListener('arError', function(ev) {
           console.error('Error AR:', ev.detail);
         });
       });
     </script>
-  </head>
-  <body>
-    <a-scene
-      mindar-image="imageTargetSrc: ./target.mind;"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false"
-      color-space="sRGB"
-      renderer="colorManagement: true, physicallyCorrectLights: true"
-      embedded
-    >
-      <!-- Cámara AR -->
-      <a-camera position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false">
-        <a-entity cursor="fuse: false; rayOrigin: mouse;"></a-entity>
-      </a-camera>
-      
-      <!-- Oso aparece al detectar cartel de INGUARÁN -->
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model
-          src="oso.glb"
-          position="0 -0.2 0"
-          rotation="0 0 0"
-          scale="0.5 0.5 0.5"
-          animation-mixer>
-        </a-gltf-model>
-      </a-entity>
-    </a-scene>
   </body>
 </html>
-
