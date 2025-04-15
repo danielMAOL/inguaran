@@ -1,55 +1,21 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>AR - Oso Bailando</title>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
-    <style>
-      body, html { margin: 0; padding: 0; overflow: hidden; }
-      #ar-container { width: 100vw; height: 100vh; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.aframe.js"></script>
   </head>
   <body>
-    <div id="ar-container"></div>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", async () => {
-        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-          container: document.querySelector("#ar-container"),
-          imageTargetSrc: "./targets.mind", // Corregido
-        });
-
-        const { renderer, scene, camera } = mindarThree;
-
-        const anchor = mindarThree.addAnchor(0);
-
-        const loader = new THREE.GLTFLoader();
-        let mixer;
-
-        loader.load("./oso.glb", (gltf) => {
-          const model = gltf.scene;
-          model.scale.set(0.5, 0.5, 0.5);
-          model.position.set(0, 0, 0);
-          anchor.group.add(model);
-
-          mixer = new THREE.AnimationMixer(model);
-          gltf.animations.forEach((clip) => {
-            mixer.clipAction(clip).play();
-          });
-        });
-
-        const clock = new THREE.Clock();
-
-        await mindarThree.start();
-        renderer.setAnimationLoop(() => {
-          const delta = clock.getDelta();
-          if (mixer) mixer.update(delta);
-          renderer.render(scene, camera);
-        });
-      });
-    </script>
+    <a-scene
+      mindar-image="imageTargetSrc: https://cdn.glitch.global/490b34e3-d003-4138-b7fa-98a6e1d7f619/targets.mind?v=1744731480352;"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enable: false"
+    >
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-sphere position="0 0 0" radius="0.25" color="#EF2D5E"></a-sphere>
+      </a-entity>
+    </a-scene>
   </body>
 </html>
-
