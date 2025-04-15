@@ -2,33 +2,30 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Prueba Abrir Cámara</title>
+    <title>Prueba MindAR Solo Cámara</title>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
     <style>
-      body, html {
-        margin: 0;
-        padding: 0;
-        background: #000;
-      }
-      video {
-        width: 100vw;
-        height: 100vh;
-        object-fit: cover;
-      }
+      body, html { margin: 0; padding: 0; overflow: hidden; }
+      #ar-container { width: 100%; height: 100vh; }
     </style>
   </head>
   <body>
-    <video id="video" autoplay muted playsinline></video>
+    <div id="ar-container"></div>
     <script>
-      const video = document.getElementById('video');
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then((stream) => {
-          console.log("Cámara accedida correctamente.");
-          video.srcObject = stream;
-        })
-        .catch((error) => {
-          console.error("Error al acceder a la cámara:", error);
-          alert("No se pudo acceder a la cámara: " + error);
-        });
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+        container: document.getElementById("ar-container"),
+        imageTargetSrc: "lona.mind", // Asegúrate de que 'lona.mind' esté disponible
+        maxTrack: 1,
+        uiLoading: "yes",
+        uiScanning: "yes",
+        capture: { facingMode: "environment" }
+      });
+      mindarThree.start().then(() => {
+        console.log("MindAR iniciado correctamente.");
+      }).catch((err) => {
+        console.error("Error iniciando MindAR:", err);
+      });
     </script>
   </body>
 </html>
