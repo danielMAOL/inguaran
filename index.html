@@ -2,34 +2,109 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Abrir Cámara</title>
+    <title>AR con MindAR</title>
+
+    <!-- MindAR 1.2.0 (detección de imagen) -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
+
+    <!-- Three.js r136 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
+
+    <!-- GLTFLoader para cargar el modelo .glb -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/loaders/GLTFLoader.js"></script>
+
     <style>
-      body {
+      /* Ocupa toda la pantalla y oculta scrollbars */
+      body, html {
         margin: 0;
         padding: 0;
-        background: #000;
+        overflow: hidden;
       }
-      video {
-        width: 100vw;
+      /* Contenedor para MindAR */
+      #ar-container {
+        width: 100%;
         height: 100vh;
-        object-fit: cover;
+        position: relative;
       }
     </style>
   </head>
+  
   <body>
-    <video id="video" autoplay muted playsinline></video>
+    <!-- Contenedor para la escena AR -->
+    <div id="ar-container"></div>
 
     <script>
-      const video = document.getElementById('video');
-      // Se solicita el acceso a la cámara trasera si está disponible.
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then((stream) => {
-          video.srcObject = stream;
-        })
-        .catch((error) => {
-          console.error("Error al acceder a la cámara:", error);
-          alert("No se pudo acceder a la cámara: " + error);
-        });
+      // 1. Inicializar MindAR con el archivo lona.mind
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+        container: document.getElementById("ar-container"),
+        imageTargetSrc: "lona.mind",  // Tu archivo .mind
+        maxTrack: 1,
+        uiLoading: "yes",
+        uiScanning: "yes",
+        capture: { facingMode: "environment" }  // Forzar cámara trasera
+      });
+
+      // Extraemos el renderer, la escena y la cámara de MindAR
+      const { renderer, scene, camera } = mindarThree;
+
+      // Deja el fondo transparente para ver el feed de la cámara
+      renderer.setClearColor(0x000000, 0);
+
+      // 2. Cargar el modelo 3D (oso-bailando.glb)
+      const loader = new THREE.GLTFLoader();
+      loader.load(
+        "oso-bailando.glb",  // Asegúrate de que se llame exactamente así
+        (gltf) => {
+          console.log("Modelo cargado exitosamente.");
+          const model = gltf.scene;
+
+          // Ajustar la escala para que el oso tenga un tamaño razonable
+          model.scale.set(0.4, 0.4, 0.4);
+
+          // Ajustar rotación si necesitas que mire de frente
+          model.rotation.set(0, 0, 0);
+
+          // Si el modelo tiene animaciones, las reproducimos
+          const mixer = new THREE.AnimationMixer(model);
+          if (gltf.animations && gltf.animations.length > 0) {
+            const action = mixer.clipAction(gltf.animations[0]);
+            action.play();
+          }
+
+          // Anclar el modelo al target de índice 0 (el primero definido en lona.mind)
+          const anchor = mindarThree.addAnchor(0);
+          anchor.group.add(model);
+
+          // Actualizar la animación en cada frame
+          mindarThree.update = (delta) => {
+            mixer.update(delta);
+          };
+        },
+        undefined,
+        (error) => {
+          console.error("Error al cargar el modelo:", error);
+        }
+      );
+
+      // 3. Iniciar la experiencia AR
+      async function startAR() {
+        try {
+          console.log("Iniciando MindAR...");
+          await mindarThree.start();
+          console.log("MindAR iniciado correctamente.");
+
+          // Iniciamos el bucle de renderizado
+          renderer.setAnimationLoop(() => {
+            renderer.render(scene, camera);
+          });
+        } catch (err) {
+          console.error("Error iniciando MindAR:", err);
+        }
+      }
+
+      // Arrancamos AR
+      startAR();
     </script>
   </body>
 </html>
+
