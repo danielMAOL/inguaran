@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>AR sin Marcador</title>
+    <title>MindAR con lona.mind</title>
     <!-- MindAR 1.2.0 -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
     <!-- Three.js r136 -->
@@ -13,13 +13,11 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        background: transparent;
       }
       #ar-container {
+        position: relative;
         width: 100%;
         height: 100vh;
-        position: relative;
-        background: transparent;
       }
     </style>
   </head>
@@ -27,55 +25,60 @@
     <div id="ar-container"></div>
 
     <script>
-      // Inicializar MindAR forzando el uso de la cámara trasera
+      // 1. Inicializa MindAR con el target "lona.mind"
       const mindarThree = new window.MINDAR.IMAGE.MindARThree({
         container: document.getElementById("ar-container"),
+        imageTargetSrc: "lona.mind",     // Tu archivo .mind
         maxTrack: 1,
         uiLoading: "yes",
         uiScanning: "yes",
-        capture: { facingMode: { exact: "environment" } }
+        capture: { facingMode: { exact: "environment" } }, // Forzar cámara trasera
       });
 
-      const start = async () => {
-        const { renderer, scene, camera } = mindarThree;
-        // Configura el fondo del renderer como transparente para ver el feed de cámara
-        renderer.setClearColor(0x000000, 0); // alpha=0
+      // Obtenemos renderer, escena y cámara para manipularlos después
+      const { renderer, scene, camera } = mindarThree;
 
-        // Cargar el modelo 3D
-        const loader = new THREE.GLTFLoader();
-        loader.load(
-          "oso-bailando.glb",
-          (gltf) => {
-            const model = gltf.scene;
-            // Escalar para que tenga aproximadamente 40 cm de alto (ajusta si es necesario)
-            model.scale.set(0.4, 0.4, 0.4);
-            // Establecer rotación a 0 para que el modelo mire hacia adelante
-            model.rotation.set(0, 0, 0);
-            scene.add(model);
+      // 2. Carga del modelo 3D (oso-bailando.glb)
+      const loader = new THREE.GLTFLoader();
+      loader.load(
+        "oso-bailando.glb",            // Asegúrate de que esté en la misma carpeta
+        (gltf) => {
+          const model = gltf.scene;
+          // Ajusta la escala para ~40cm (depende del tamaño original)
+          model.scale.set(0.4, 0.4, 0.4);
+          // Haz que el oso mire de frente
+          model.rotation.y = Math.PI;
 
-            // Configurar AnimationMixer para reproducir la animación
-            const mixer = new THREE.AnimationMixer(model);
-            if (gltf.animations.length > 0) {
-              const action = mixer.clipAction(gltf.animations[0]);
-              action.play();
-            }
-            // Actualizar el mixer en cada frame
-            mindarThree.update = (delta) => {
-              mixer.update(delta);
-            };
-          },
-          undefined,
-          (error) => {
-            console.error("Error cargando modelo:", error);
+          // Crea un mixer para reproducir la animación
+          const mixer = new THREE.AnimationMixer(model);
+          if (gltf.animations.length > 0) {
+            const action = mixer.clipAction(gltf.animations[0]);
+            action.play();
           }
-        );
 
-        // Iniciar la experiencia AR
+          // 3. Anclar el modelo al target de índice 0
+          const anchor = mindarThree.addAnchor(0);
+          anchor.group.add(model);
+
+          // En cada frame se actualiza el mixer (para la animación)
+          mindarThree.update = (delta) => {
+            mixer.update(delta);
+          };
+        },
+        undefined,
+        (error) => {
+          console.error("Error cargando modelo:", error);
+        }
+      );
+
+      // 4. Iniciar la experiencia AR
+      async function startAR() {
         await mindarThree.start();
-        document.body.style.backgroundColor = "transparent";
-      };
-
-      start();
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
+      }
+      startAR();
     </script>
   </body>
 </html>
