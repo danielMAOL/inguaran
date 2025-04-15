@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>Solo Cámara AR Test</title>
+    <title>AR Oso INGUARÁN - Solución</title>
     <style>
       * {
         margin: 0;
@@ -16,64 +16,81 @@
         overflow: hidden;
         position: fixed;
       }
-      #video-container {
+      #loading {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-      }
-      #camera-video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      #status {
-        position: fixed;
-        bottom: 20px;
-        left: 0;
-        width: 100%;
         background: rgba(0,0,0,0.5);
         color: white;
-        padding: 10px;
-        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
       }
     </style>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
   </head>
   <body>
-    <div id="video-container">
-      <video id="camera-video" autoplay playsinline></video>
-    </div>
-    <div id="status">Iniciando cámara...</div>
+    <div id="loading">Iniciando AR, por favor espera...</div>
+    
+    <a-scene
+      mindar-image="imageTargetSrc: ./target.mind; filterMinCF: 0.0001; filterBeta: 0.01; warmupTolerance: 5; missTolerance: 5;"
+      color-space="sRGB"
+      embedded
+      renderer="colorManagement: true; precision: high; antialias: true; alpha: true;"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+    >
+      <a-assets>
+        <a-asset-item id="bearModel" src="oso.glb"></a-asset-item>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-gltf-model
+          src="#bearModel"
+          position="0 -0.2 0"
+          rotation="0 0 0"
+          scale="0.5 0.5 0.5"
+          animation-mixer
+        ></a-gltf-model>
+      </a-entity>
+    </a-scene>
     
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-        const videoElement = document.getElementById('camera-video');
-        const statusElement = document.getElementById('status');
+        const scene = document.querySelector('a-scene');
+        const loading = document.getElementById('loading');
         
-        // Función simple para activar la cámara
-        function startCamera() {
-          statusElement.textContent = "Solicitando acceso a la cámara...";
-          
-          navigator.mediaDevices.getUserMedia({ 
-            video: { 
-              facingMode: 'environment',
-              width: { ideal: window.innerWidth },
-              height: { ideal: window.innerHeight }
-            } 
-          })
-          .then(function(stream) {
-            videoElement.srcObject = stream;
-            statusElement.textContent = "Cámara activada correctamente";
-          })
-          .catch(function(err) {
-            console.error("Error al acceder a la cámara:", err);
-            statusElement.textContent = "Error al acceder a la cámara: " + err.message;
-          });
-        }
+        // Ocultar pantalla de carga cuando la escena esté lista
+        scene.addEventListener('loaded', function() {
+          console.log("Escena cargada");
+        });
         
-        // Iniciar cámara cuando la página esté lista
-        startCamera();
+        scene.addEventListener('arReady', function() {
+          console.log("AR listo");
+          loading.style.display = 'none';
+        });
+        
+        scene.addEventListener('arError', function(event) {
+          console.error("Error AR:", event.detail);
+        });
+        
+        // Inicializar manualmente si es necesario
+        setTimeout(function() {
+          if (loading.style.display !== 'none') {
+            console.log("Forzando inicio de AR...");
+            loading.style.display = 'none';
+            if (scene.systems['mindar-image-system']) {
+              scene.systems['mindar-image-system'].start();
+            }
+          }
+        }, 3000);
       });
     </script>
   </body>
