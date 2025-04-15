@@ -2,18 +2,41 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Prueba de Cámara</title>
+  <title>MindAR Rectángulo</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
+    #ar-container { width: 100vw; height: 100vh; position: relative; }
+  </style>
 </head>
 <body>
-  <video id="video" width="640" height="480" autoplay></video>
+  <div id="ar-container"></div>
+
   <script>
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(function(stream) {
-        document.getElementById('video').srcObject = stream;
-      })
-      .catch(function(err) {
-        console.error("Error al acceder a la cámara: ", err);
+    document.addEventListener("DOMContentLoaded", async () => {
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+        container: document.querySelector("#ar-container"),
+        imageTargetSrc: "./targets.mind"
       });
+
+      const { renderer, scene, camera } = mindarThree;
+
+      const anchor = mindarThree.addAnchor(0);
+      const geometry = new THREE.PlaneGeometry(1, 0.5);
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      const plane = new THREE.Mesh(geometry, material);
+      anchor.group.add(plane);
+
+      try {
+        await mindarThree.start();
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
+      } catch (err) {
+        console.error("Error al iniciar MindAR:", err);
+      }
+    });
   </script>
 </body>
 </html>
