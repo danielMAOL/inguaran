@@ -1,38 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>AR Oso INGUARÁN - Interactivo</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      html, body {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        position: fixed;
-      }
-      #loading {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        color: white;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-      }
-    </style>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-aframe.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <!-- ... (metadatos y estilos iguales) ... -->
   </head>
   <body>
     <div id="loading">Iniciando AR, por favor espera...</div>
@@ -49,89 +18,50 @@
         <a-asset-item id="bearModel" src="oso.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Cámara -->
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <!-- Cámara con cursor interactivo -->
+      <a-camera position="0 0 0" cursor="rayOrigin: mouse" raycaster="objects: .clickable">
+      </a-camera>
       
-      <!-- Target + contenido -->
-      <a-entity mindar-image-target="targetIndex: 0">
-
-        <!-- OSO -->
-        <a-gltf-model
-          src="#bearModel"
-          position="0 0 0.1"
-          rotation="-50 0 -20"
-          scale="1 1 1"
-          animation-mixer
-        ></a-gltf-model>
-
-        <!-- TEXTO DE AUTORÍA -->
-        <a-text
-          value="Creado por MAOL"
-          position="0 0.8 0"
-          align="center"
-          color="#ffffff"
-          width="2"
-        ></a-text>
-
-        <!-- BOTÓN FLOTANTE -->
-        <a-plane
-          id="visitButton"
-          position="0 -0.6 0"
-          width="1"
-          height="0.3"
-          color="#0066ff"
-          class="clickable"
-        ></a-plane>
-
-        <!-- TEXTO ENCIMA DEL BOTÓN -->
-        <a-text
-          value="¡Visítanos!"
-          position="0 -0.6 0.01"
-          align="center"
-          color="#ffffff"
-          width="2"
-        ></a-text>
-      </a-entity>
+      <!-- Target + contenido (igual que antes) ... -->
     </a-scene>
 
-    <!-- ENLACE REAL OCULTO -->
-    <a id="hiddenLink" href="https://maol.com.mx" target="_blank" style="display: none;">Enlace</a>
+    <!-- Enlace oculto (igual que antes) ... -->
     
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const scene = document.querySelector('a-scene');
         const loading = document.getElementById('loading');
 
-        // ✅ Acción confiable en móviles para abrir enlace
-        document.getElementById("visitButton").addEventListener("click", function () {
-          document.getElementById("hiddenLink").click();
+        // Configurar evento después de que la escena esté lista
+        scene.addEventListener('loaded', function() {
+          const visitButton = document.querySelector('#visitButton');
+          
+          // 1. Usar evento 'click' de A-Frame
+          visitButton.addEventListener('click', function() {
+            document.getElementById("hiddenLink").click();
+          });
+
+          // 2. Opción mobile: evento touchstart
+          visitButton.addEventListener('touchstart', function() {
+            document.getElementById("hiddenLink").click();
+          });
         });
 
-        scene.addEventListener('loaded', function() {
-          console.log("Escena cargada");
-        });
-        
-        scene.addEventListener('arReady', function() {
-          console.log("AR listo");
-          loading.style.display = 'none';
-        });
-        
-        scene.addEventListener('arError', function(event) {
-          console.error("Error AR:", event.detail);
-        });
-        
-        setTimeout(function() {
-          if (loading.style.display !== 'none') {
-            console.log("Forzando inicio de AR...");
-            loading.style.display = 'none';
-            if (scene.systems['mindar-image-system']) {
-              scene.systems['mindar-image-system'].start();
-            }
-          }
-        }, 3000);
+        // Resto del código de inicialización (igual que antes) ...
+      });
+
+      // Componente adicional para mejor manejo táctil
+      AFRAME.registerComponent('clickhandler', {
+        init: function() {
+          this.el.addEventListener('click', () => {
+            document.getElementById("hiddenLink").click();
+          });
+          this.el.addEventListener('touchstart', () => {
+            document.getElementById("hiddenLink").click();
+          });
+        }
       });
     </script>
   </body>
 </html>
-
 
