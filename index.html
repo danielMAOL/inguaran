@@ -3,9 +3,8 @@
   <head>
     <meta charset="utf-8">
     <title>MindAR con lona.mind</title>
-    <!-- MindAR 1.2.0 -->
+    <!-- Cargar MindAR y Three.js -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
-    <!-- Three.js r136 -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/loaders/GLTFLoader.js"></script>
     <style>
@@ -13,54 +12,57 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
+        background: transparent;
       }
       #ar-container {
-        position: relative;
         width: 100%;
         height: 100vh;
+        position: relative;
       }
     </style>
   </head>
   <body>
     <div id="ar-container"></div>
-
     <script>
-      // 1. Inicializa MindAR con el target "lona.mind"
+      // Inicializa MindAR usando "lona.mind" como target
       const mindarThree = new window.MINDAR.IMAGE.MindARThree({
         container: document.getElementById("ar-container"),
-        imageTargetSrc: "lona.mind",     // Tu archivo .mind
+        imageTargetSrc: "lona.mind",  // Asegúrate de que el archivo exista y esté en la misma carpeta
         maxTrack: 1,
         uiLoading: "yes",
         uiScanning: "yes",
-        capture: { facingMode: { exact: "environment" } }, // Forzar cámara trasera
+        // Se usa "environment" en vez de exact para mayor compatibilidad
+        capture: { facingMode: "environment" }  
       });
-
-      // Obtenemos renderer, escena y cámara para manipularlos después
+      
+      // Extraemos el renderer, escena y cámara
       const { renderer, scene, camera } = mindarThree;
+      // Configura el renderer para fondo transparente (ver feed de cámara)
+      renderer.setClearColor(0x000000, 0);
 
-      // 2. Carga del modelo 3D (oso-bailando.glb)
+      // Cargar el modelo 3D "oso-bailando.glb"
       const loader = new THREE.GLTFLoader();
       loader.load(
-        "oso-bailando.glb",            // Asegúrate de que esté en la misma carpeta
+        "oso-bailando.glb",  // Verifica que este archivo esté presente y correctamente nombrado
         (gltf) => {
           const model = gltf.scene;
-          // Ajusta la escala para ~40cm (depende del tamaño original)
+          // Escala el modelo (ajusta si es necesario)
           model.scale.set(0.4, 0.4, 0.4);
-          // Haz que el oso mire de frente
-          model.rotation.y = Math.PI;
+          // Rota el modelo para que mire de frente (ajusta según como fue exportado)
+          model.rotation.set(0, 0, 0);
 
-          // Crea un mixer para reproducir la animación
+          // Crea el AnimationMixer para reproducir la animación del modelo
           const mixer = new THREE.AnimationMixer(model);
-          if (gltf.animations.length > 0) {
+          if(gltf.animations && gltf.animations.length > 0) {
             const action = mixer.clipAction(gltf.animations[0]);
             action.play();
           }
 
-          // 3. Anclar el modelo al target de índice 0
+          // Ancla el modelo al target con índice 0 (el que hayas configurado en "lona.mind")
           const anchor = mindarThree.addAnchor(0);
           anchor.group.add(model);
 
-          // En cada frame se actualiza el mixer (para la animación)
+          // Actualiza el mixer en cada frame
           mindarThree.update = (delta) => {
             mixer.update(delta);
           };
@@ -71,12 +73,17 @@
         }
       );
 
-      // 4. Iniciar la experiencia AR
+      // Función para iniciar la experiencia AR
       async function startAR() {
-        await mindarThree.start();
-        renderer.setAnimationLoop(() => {
-          renderer.render(scene, camera);
-        });
+        try {
+          await mindarThree.start();
+          // Inicia el bucle de renderizado
+          renderer.setAnimationLoop(() => {
+            renderer.render(scene, camera);
+          });
+        } catch (err) {
+          console.error("Error iniciando MindAR:", err);
+        }
       }
       startAR();
     </script>
