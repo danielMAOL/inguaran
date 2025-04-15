@@ -1,41 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Prueba AR Rectángulo</title>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
-    <style>
-      body, html { margin: 0; padding: 0; overflow: hidden; }
-      #ar-container { width: 100vw; height: 100vh; }
-    </style>
-  </head>
-  <body>
-    <div id="ar-container"></div>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", async () => {
-        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-          container: document.querySelector("#ar-container"),
-          imageTargetSrc: "./assets/target.mind",
-        });
-
-        const { renderer, scene, camera } = mindarThree;
-
-        const anchor = mindarThree.addAnchor(0);
-
-        const geometry = new THREE.PlaneGeometry(1, 0.5); // Rectángulo
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const plane = new THREE.Mesh(geometry, material);
-
-        anchor.group.add(plane);
-
-        await mindarThree.start();
-        renderer.setAnimationLoop(() => {
-          renderer.render(scene, camera);
-        });
+<head>
+  <meta charset="UTF-8">
+  <title>Prueba de Cámara</title>
+</head>
+<body>
+  <video id="video" width="640" height="480" autoplay></video>
+  <script>
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function(stream) {
+        document.getElementById('video').srcObject = stream;
+      })
+      .catch(function(err) {
+        console.error("Error al acceder a la cámara: ", err);
       });
-    </script>
-  </body>
+  </script>
+</body>
 </html>
-
