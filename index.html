@@ -1,45 +1,42 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Oso de frente</title>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
-  </style>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Oso con cámara real</title>
+    <style>
+      body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+      a-scene { position: absolute; width: 100%; height: 100%; }
+    </style>
 
-  <!-- Librerías necesarias -->
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-</head>
-<body>
-  <a-scene background="color: #ffffff">
-    <!-- Modelo del oso -->
-    <a-assets>
-      <a-asset-item id="oso" src="oso.glb"></a-asset-item>
-    </a-assets>
+    <!-- MindAR + A-Frame -->
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.aframe.js"></script>
+  </head>
 
-    <!-- Oso girado hacia el frente -->
-    <a-entity 
-      gltf-model="#oso" 
-      position="0 1.5 -2" 
-      rotation="0 0 0" 
-      scale="0.6 0.6 0.6" 
-      animation-mixer>
-    </a-entity>
+  <body>
+    <a-scene
+      mindar-image="imageTargetSrc: ./target.mind;"  <!-- aún se necesita un archivo aunque no se use -->
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+      embedded
+    >
+      <!-- Cámara real -->
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Cámara móvil -->
-    <a-entity 
-      id="camara" 
-      camera 
-      look-controls 
-      position="0 1.6 0">
-    </a-entity>
-
-    <!-- Luces -->
-    <a-light type="ambient" intensity="1.2"></a-light>
-    <a-light type="directional" intensity="1" position="1 3 2"></a-light>
-  </a-scene>
-</body>
+      <!-- Oso siempre visible -->
+      <a-entity position="0 0 0">
+        <a-gltf-model 
+          src="oso.glb" 
+          position="0 -0.2 0" 
+          rotation="0 0 0" 
+          scale="0.5 0.5 0.5"
+          animation-mixer>
+        </a-gltf-model>
+      </a-entity>
+    </a-scene>
+  </body>
 </html>
+
 
