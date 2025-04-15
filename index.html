@@ -8,42 +8,61 @@
     <!-- Three.js r136 -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: transparent;
+      }
+      #ar-container {
+        width: 100%;
+        height: 100vh;
+        position: relative;
+        background: transparent;
+      }
+    </style>
   </head>
-  <body style="margin: 0;">
-    <div id="ar-container" style="width: 100%; height: 100vh;"></div>
+  <body>
+    <div id="ar-container"></div>
 
     <script>
-      // 1. Inicializar MindAR con opción para usar la cámara trasera
+      // Inicializar MindAR forzando el uso de la cámara trasera
       const mindarThree = new window.MINDAR.IMAGE.MindARThree({
         container: document.getElementById("ar-container"),
         maxTrack: 1,
-        uiLoading: "yes", // Muestra spinner de carga
-        uiScanning: "yes", // Muestra overlay de escaneo
-        capture: { facingMode: { exact: "environment" } }  // Forzar cámara trasera
+        uiLoading: "yes",
+        uiScanning: "yes",
+        capture: { facingMode: { exact: "environment" } }
       });
 
-      // 2. Cargar modelo 3D
       const start = async () => {
-        const { scene } = mindarThree;
+        const { renderer, scene, camera } = mindarThree;
+        // Configura el fondo del renderer como transparente para ver el feed de cámara
+        renderer.setClearColor(0x000000, 0); // alpha=0
+
+        // Cargar el modelo 3D
         const loader = new THREE.GLTFLoader();
-        
         loader.load(
           "oso-bailando.glb",
           (gltf) => {
             const model = gltf.scene;
+            // Escalar para que tenga aproximadamente 40 cm de alto (ajusta si es necesario)
             model.scale.set(0.4, 0.4, 0.4);
-            model.rotation.y = Math.PI;
+            // Establecer rotación a 0 para que el modelo mire hacia adelante
+            model.rotation.set(0, 0, 0);
+            scene.add(model);
 
-            // Configurar la animación
+            // Configurar AnimationMixer para reproducir la animación
             const mixer = new THREE.AnimationMixer(model);
-            const action = mixer.clipAction(gltf.animations[0]);
-            action.play();
-
+            if (gltf.animations.length > 0) {
+              const action = mixer.clipAction(gltf.animations[0]);
+              action.play();
+            }
+            // Actualizar el mixer en cada frame
             mindarThree.update = (delta) => {
               mixer.update(delta);
             };
-
-            scene.add(model);
           },
           undefined,
           (error) => {
@@ -51,7 +70,7 @@
           }
         );
 
-        // 3. Iniciar AR
+        // Iniciar la experiencia AR
         await mindarThree.start();
         document.body.style.backgroundColor = "transparent";
       };
