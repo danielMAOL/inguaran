@@ -2,10 +2,20 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>AR con cámara real</title>
+    <title>Oso con AR</title>
     <style>
-      body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-      a-scene { position: absolute; width: 100%; height: 100%; }
+      body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      a-scene {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
     </style>
 
     <!-- Librerías necesarias -->
@@ -22,15 +32,15 @@
       device-orientation-permission-ui="enabled: false"
       embedded
     >
-      <!-- Cámara -->
+      <!-- Cámara de MindAR -->
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- Oso visible desde el inicio -->
-      <a-entity position="0 0 0">
-        <a-gltf-model 
-          src="oso.glb" 
-          position="0 -0.2 0" 
-          rotation="0 0 0" 
+      <!-- El oso solo aparece cuando detecta el marcador -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-gltf-model
+          src="oso.glb"
+          position="0 -0.2 0"
+          rotation="0 0 0"
           scale="0.5 0.5 0.5"
           animation-mixer>
         </a-gltf-model>
@@ -38,5 +48,4 @@
     </a-scene>
   </body>
 </html>
-
 
