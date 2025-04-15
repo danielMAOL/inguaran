@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Oso 3D con cámara móvil</title>
+  <title>Oso de frente</title>
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
@@ -14,21 +14,21 @@
 </head>
 <body>
   <a-scene background="color: #ffffff">
-    <!-- Modelo cargado -->
+    <!-- Modelo del oso -->
     <a-assets>
       <a-asset-item id="oso" src="oso.glb"></a-asset-item>
     </a-assets>
 
-    <!-- Oso animado centrado y visible -->
+    <!-- Oso girado hacia el frente -->
     <a-entity 
       gltf-model="#oso" 
       position="0 1.5 -2" 
-      rotation="0 180 0" 
+      rotation="0 0 0" 
       scale="0.6 0.6 0.6" 
       animation-mixer>
     </a-entity>
 
-    <!-- Cámara móvil (gira con el celular) -->
+    <!-- Cámara móvil -->
     <a-entity 
       id="camara" 
       camera 
@@ -42,3 +42,4 @@
   </a-scene>
 </body>
 </html>
+
