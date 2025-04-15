@@ -17,24 +17,46 @@
         height: 100%;
       }
     </style>
-
     <!-- Librerías necesarias -->
     <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.aframe.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const sceneEl = document.querySelector('a-scene');
+        
+        // Esperar a que la escena esté lista
+        sceneEl.addEventListener('loaded', function() {
+          console.log('Escena AR cargada');
+        });
+        
+        // Agregar un evento al arranque de AR
+        sceneEl.addEventListener('arready', function() {
+          console.log('AR iniciado y listo');
+        });
+        
+        // Verificar errores
+        sceneEl.addEventListener('arError', function(ev) {
+          console.error('Error AR:', ev.detail);
+        });
+      });
+    </script>
   </head>
-
   <body>
     <a-scene
       mindar-image="imageTargetSrc: ./target.mind;"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights: true"
       embedded
     >
       <!-- Cámara AR -->
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
+      <a-camera position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false">
+        <a-entity cursor="fuse: false; rayOrigin: mouse;"></a-entity>
+      </a-camera>
+      
       <!-- Oso aparece al detectar cartel de INGUARÁN -->
       <a-entity mindar-image-target="targetIndex: 0">
         <a-gltf-model
