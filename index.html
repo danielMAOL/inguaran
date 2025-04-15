@@ -2,11 +2,14 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>AR Debug - Oso Bailando</title>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/loaders/GLTFLoader.js"></script>
+    <title>AR con Oso Bailando</title>
+    <!-- Importante: Orden correcto de carga de bibliotecas -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- MindAR después de Three.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-three.prod.js"></script>
+    
     <style>
       body, html { margin: 0; padding: 0; overflow: hidden; }
       #ar-container { width: 100%; height: 100vh; position: relative; }
@@ -31,16 +34,32 @@
       .error { color: #ff5555; }
       .success { color: #55ff55; }
       .warning { color: #ffff55; }
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 24px;
+        z-index: 2000;
+      }
       .hidden { display: none !important; }
     </style>
   </head>
   <body>
+    <div id="loading-screen">Cargando recursos, por favor espera...</div>
     <div id="ar-container"></div>
     <div id="debug-panel"></div>
     
     <script>
       // Panel de depuración para mostrar todos los mensajes y errores
       const debugPanel = document.getElementById('debug-panel');
+      const loadingScreen = document.getElementById('loading-screen');
       
       function logMessage(message, type = 'info') {
         console.log(`[${type}]`, message);
@@ -57,56 +76,102 @@
         return false;
       };
       
-      document.addEventListener('DOMContentLoaded', function() {
-        logMessage('Página cargada. Iniciando verificación de recursos...');
+      // Asegurarse de que todo esté cargado antes de continuar
+      window.addEventListener('load', function() {
+        logMessage('Página completamente cargada. Verificando recursos...');
         
-        // 1. Verificar que las bibliotecas se cargaron correctamente
-        if (!window.MINDAR) {
-          logMessage('Error: La biblioteca MindAR no se cargó correctamente', 'error');
-          return;
-        } else {
-          logMessage('MindAR cargado correctamente', 'success');
+        // Verificar explícitamente que MindAR está disponible
+        setTimeout(() => {
+          try {
+            if (typeof window.MINDAR === 'undefined' || typeof window.MINDAR.IMAGE === 'undefined') {
+              loadingScreen.textContent = "Error: MindAR no se cargó correctamente. Revisa tu conexión.";
+              logMessage('Error: La biblioteca MindAR no se cargó correctamente', 'error');
+              
+              // Intentar cargar de nuevo las bibliotecas
+              logMessage('Intentando recargar las bibliotecas...', 'warning');
+              
+              const mindARScript = document.createElement('script');
+              mindARScript.src = "https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image.prod.js";
+              document.head.appendChild(mindARScript);
+              
+              const mindARThreeScript = document.createElement('script');
+              mindARThreeScript.src = "https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-three.prod.js";
+              mindARThreeScript.onload = function() {
+                logMessage('Bibliotecas recargadas. Intentando iniciar de nuevo...', 'warning');
+                setTimeout(checkLibraries, 1000);
+              };
+              document.head.appendChild(mindARThreeScript);
+            } else {
+              logMessage('MindAR cargado correctamente', 'success');
+              checkThreeJS();
+            }
+          } catch (e) {
+            logMessage(`Error verificando MindAR: ${e.message}`, 'error');
+            loadingScreen.textContent = "Error verificando bibliotecas.";
+          }
+        }, 1000);
+        
+        function checkLibraries() {
+          if (typeof window.MINDAR !== 'undefined' && typeof window.MINDAR.IMAGE !== 'undefined') {
+            logMessage('MindAR cargado correctamente después de reintento', 'success');
+            checkThreeJS();
+          } else {
+            logMessage('MindAR sigue sin cargarse correctamente', 'error');
+            loadingScreen.textContent = "Error: No se puede cargar MindAR. Prueba con otro navegador.";
+          }
         }
         
-        if (!window.THREE) {
-          logMessage('Error: Three.js no se cargó correctamente', 'error');
-          return;
-        } else {
+        function checkThreeJS() {
+          if (!window.THREE) {
+            logMessage('Error: Three.js no se cargó correctamente', 'error');
+            loadingScreen.textContent = "Error: Three.js no se cargó correctamente";
+            return;
+          } 
+          
           logMessage('Three.js cargado correctamente', 'success');
-        }
-        
-        if (!window.THREE.GLTFLoader) {
-          logMessage('Error: GLTFLoader no se cargó correctamente', 'error');
-          return;
-        } else {
+          
+          if (!window.THREE.GLTFLoader) {
+            logMessage('Error: GLTFLoader no se cargó correctamente', 'error');
+            loadingScreen.textContent = "Error: GLTFLoader no se cargó correctamente";
+            return;
+          }
+          
           logMessage('GLTFLoader cargado correctamente', 'success');
+          
+          // Verificar acceso a los archivos
+          checkFiles();
         }
         
-        // 2. Verificar que los archivos existan
-        logMessage('Verificando archivo lona.mind...');
-        fetch('lona.mind')
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`No se pudo acceder a lona.mind (${response.status})`);
-            }
-            logMessage('Archivo lona.mind accesible', 'success');
-            
-            // Verificar el modelo 3D
-            logMessage('Verificando archivo oso-bailando.glb...');
-            return fetch('oso-bailando.glb');
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`No se pudo acceder a oso-bailando.glb (${response.status})`);
-            }
-            logMessage('Archivo oso-bailando.glb accesible', 'success');
-            
-            // Si todos los archivos están bien, iniciar AR
-            initAR();
-          })
-          .catch(error => {
-            logMessage(`Error de acceso a archivos: ${error.message}`, 'error');
-          });
+        function checkFiles() {
+          // Verificar que los archivos existan
+          logMessage('Verificando archivo lona.mind...');
+          
+          fetch('./lona.mind') // Nota: usar ruta relativa
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`No se pudo acceder a lona.mind (${response.status})`);
+              }
+              logMessage('Archivo lona.mind accesible', 'success');
+              
+              // Verificar el modelo 3D
+              logMessage('Verificando archivo oso-bailando.glb...');
+              return fetch('./oso-bailando.glb'); // Nota: usar ruta relativa
+            })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`No se pudo acceder a oso-bailando.glb (${response.status})`);
+              }
+              logMessage('Archivo oso-bailando.glb accesible', 'success');
+              
+              // Si todos los archivos están bien, iniciar AR
+              loadingScreen.classList.add('hidden');
+              initAR();
+            })
+            .catch(error => {
+              logMessage(`Error de acceso a archivos: ${error.message}`, 'error');
+              loadingScreen.textContent = `Error: ${error.message}`;
+            });
+        }
         
         function initAR() {
           try {
@@ -119,7 +184,7 @@
             logMessage('Creando instancia de MindAR...');
             const mindarThree = new window.MINDAR.IMAGE.MindARThree({
               container: arContainer,
-              imageTargetSrc: 'lona.mind',
+              imageTargetSrc: './lona.mind', // Usar ruta relativa
               maxTrack: 1,
               uiLoading: 'yes',
               uiScanning: 'yes',
@@ -158,6 +223,7 @@
                 loadGLBModel(anchor);
                 
                 // Iniciar renderizado
+                const clock = new THREE.Clock();
                 renderer.setAnimationLoop(() => {
                   cube.rotation.x += 0.01;
                   cube.rotation.y += 0.01;
@@ -166,9 +232,13 @@
               })
               .catch(error => {
                 logMessage(`Error al iniciar MindAR: ${error.message}`, 'error');
+                loadingScreen.classList.remove('hidden');
+                loadingScreen.textContent = `Error al iniciar AR: ${error.message}`;
               });
           } catch (error) {
             logMessage(`Error en inicialización AR: ${error.message}`, 'error');
+            loadingScreen.classList.remove('hidden');
+            loadingScreen.textContent = `Error crítico: ${error.message}`;
           }
         }
         
@@ -179,7 +249,7 @@
           const loader = new THREE.GLTFLoader();
           
           loader.load(
-            'oso-bailando.glb',
+            './oso-bailando.glb', // Usar ruta relativa
             (gltf) => {
               logMessage('Modelo GLB cargado correctamente', 'success');
               
