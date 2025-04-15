@@ -2,31 +2,118 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Prueba MindAR Solo Cámara</title>
+    <title>AR con Oso Bailando</title>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/loaders/GLTFLoader.js"></script>
     <style>
       body, html { margin: 0; padding: 0; overflow: hidden; }
-      #ar-container { width: 100%; height: 100vh; }
+      #ar-container { width: 100%; height: 100vh; position: relative; }
+      #loading { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0,0,0,0.5);
+        color: white;
+        font-size: 24px;
+        z-index: 1000;
+      }
+      .hidden { display: none !important; }
     </style>
   </head>
   <body>
     <div id="ar-container"></div>
+    <div id="loading">Cargando recursos, por favor espera...</div>
+    
     <script>
-      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-        container: document.getElementById("ar-container"),
-        imageTargetSrc: "lona.mind",  // Asegúrate de que 'lona.mind' esté en la carpeta y sea válido
-        maxTrack: 1,
-        uiLoading: "yes",
-        uiScanning: "yes",
-        capture: { facingMode: "environment" }
-      });
-      mindarThree.start().then(() => {
-        console.log("MindAR iniciado correctamente.");
-      }).catch((err) => {
-        console.error("Error iniciando MindAR:", err);
+      document.addEventListener('DOMContentLoaded', function() {
+        const loadingElement = document.getElementById('loading');
+        const arContainer = document.getElementById('ar-container');
+        
+        // Inicializar MindAR
+        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+          container: arContainer,
+          imageTargetSrc: "lona.mind",
+          maxTrack: 1,
+          uiLoading: "yes",
+          uiScanning: "yes",
+          capture: { facingMode: "environment" }
+        });
+        
+        // Configurar escena, cámara y renderizador
+        const { renderer, scene, camera } = mindarThree;
+        
+        // Crear luces para iluminar el modelo 3D
+        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbbb, 1);
+        scene.add(light);
+        
+        // Crear un anchor para el target
+        const anchor = mindarThree.addAnchor(0); // 0 es el índice del primer target
+        
+        // Cargar el modelo GLB
+        const loader = new THREE.GLTFLoader();
+        
+        let mixer = null;
+        let animationAction = null;
+        
+        loader.load("oso-bailando.glb", function(gltf) {
+          loadingElement.classList.add('hidden');
+          
+          // Ajustar la escala y posición del modelo
+          const model = gltf.scene;
+          model.scale.set(0.5, 0.5, 0.5);
+          model.position.set(0, 0, 0);
+          
+          // Añadir el modelo al anchor
+          anchor.group.add(model);
+          
+          // Configurar animación si existe
+          if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(model);
+            animationAction = mixer.clipAction(gltf.animations[0]);
+            animationAction.play();
+          }
+          
+          console.log("Modelo cargado correctamente");
+        }, undefined, function(error) {
+          console.error("Error cargando el modelo:", error);
+          loadingElement.innerHTML = "Error al cargar el modelo 3D";
+        });
+        
+        // Variables para el reloj y la animación
+        const clock = new THREE.Clock();
+        
+        // Iniciar AR y el loop de renderizado
+        mindarThree.start().then(() => {
+          console.log("MindAR iniciado correctamente");
+          
+          // Función de renderizado en bucle
+          renderer.setAnimationLoop(() => {
+            // Actualizar animación si existe
+            if (mixer) {
+              mixer.update(clock.getDelta());
+            }
+            
+            // Renderizar escena
+            renderer.render(scene, camera);
+          });
+        }).catch((err) => {
+          console.error("Error iniciando MindAR:", err);
+          loadingElement.innerHTML = "Error al iniciar AR: " + err.message;
+        });
+        
+        // Detener todo cuando se cierre la ventana
+        window.addEventListener('beforeunload', () => {
+          mindarThree.stop();
+          renderer.setAnimationLoop(null);
+        });
       });
     </script>
   </body>
 </html>
-
