@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>AR Oso INGUARÁN</title>
+    <title>Solo Cámara AR Test</title>
     <style>
       * {
         margin: 0;
@@ -16,112 +16,64 @@
         overflow: hidden;
         position: fixed;
       }
-      .camera-permission-button {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 1000;
-        padding: 10px 20px;
-        background-color: #4CAF50;
+      #video-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      #camera-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      #status {
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.5);
         color: white;
-        font-size: 16px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
+        padding: 10px;
+        text-align: center;
       }
     </style>
-    <!-- Librerías fundamentales primero para mejor carga -->
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.aframe.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
   </head>
   <body>
-    <!-- Botón para iniciar la cámara si es necesario -->
-    <button class="camera-permission-button" id="startButton" style="display: none;">
-      Iniciar Cámara
-    </button>
-    
-    <a-scene
-      id="ar-scene"
-      mindar-image="imageTargetSrc: ./target.mind; autoStart: true; uiLoading: #no-ui-loading; uiScanning: true; uiError: true;"
-      embedded
-      renderer="colorManagement: true; alpha: true; antialias: true;"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false"
-    >
-      <!-- Cámara con captura inmediata -->
-      <a-camera position="0 0 0" look-controls="enabled: false" camera="active: true"></a-camera>
-      
-      <!-- Oso -->
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model
-          src="oso.glb"
-          position="0 -0.2 0"
-          rotation="0 0 0"
-          scale="0.5 0.5 0.5"
-          animation-mixer
-        ></a-gltf-model>
-      </a-entity>
-    </a-scene>
+    <div id="video-container">
+      <video id="camera-video" autoplay playsinline></video>
+    </div>
+    <div id="status">Iniciando cámara...</div>
     
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-        // Referencias
-        const scene = document.querySelector('a-scene');
-        const startButton = document.getElementById('startButton');
+        const videoElement = document.getElementById('camera-video');
+        const statusElement = document.getElementById('status');
         
-        // Inicializar directamente la cámara
-        function initCamera() {
+        // Función simple para activar la cámara
+        function startCamera() {
+          statusElement.textContent = "Solicitando acceso a la cámara...";
+          
           navigator.mediaDevices.getUserMedia({ 
-            audio: false, 
             video: { 
               facingMode: 'environment',
               width: { ideal: window.innerWidth },
-              height: { ideal: window.innerHeight } 
+              height: { ideal: window.innerHeight }
             } 
           })
           .then(function(stream) {
-            console.log("Cámara activada exitosamente");
-            // No detenemos el stream para que la cámara permanezca activa
-            // Forzar la actualización de la escena
-            scene.renderer.render(scene.object3D, scene.camera);
+            videoElement.srcObject = stream;
+            statusElement.textContent = "Cámara activada correctamente";
           })
           .catch(function(err) {
             console.error("Error al acceder a la cámara:", err);
-            // Mostrar botón si hay error
-            startButton.style.display = 'block';
+            statusElement.textContent = "Error al acceder a la cámara: " + err.message;
           });
         }
         
-        // Iniciar la cámara inmediatamente
-        initCamera();
-        
-        // Botón alternativo si falla la activación automática
-        startButton.addEventListener('click', function() {
-          startButton.style.display = 'none';
-          initCamera();
-        });
-        
-        // Monitorear eventos
-        scene.addEventListener('loaded', function() {
-          console.log("Escena cargada");
-        });
-        
-        scene.addEventListener('arError', function(event) {
-          console.error("Error AR:", event.detail);
-        });
-        
-        // Forzar el inicio de AR después de un breve retraso
-        setTimeout(function() {
-          if (typeof scene.systems['mindar-image-system'] !== 'undefined') {
-            if (!scene.systems['mindar-image-system'].isRunning) {
-              console.log("Iniciando sistema AR manualmente");
-              scene.systems['mindar-image-system'].start();
-            }
-          }
-        }, 1000);
+        // Iniciar cámara cuando la página esté lista
+        startCamera();
       });
     </script>
   </body>
