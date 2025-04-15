@@ -29,14 +29,32 @@
         align-items: center;
         z-index: 1000;
       }
+      /* Botón físico superpuesto */
+      #physicalButton {
+        position: fixed;
+        bottom: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 15px 30px;
+        background-color: #0066ff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: bold;
+        z-index: 999;
+        cursor: pointer;
+      }
     </style>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-aframe.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-    <script src="https://unpkg.com/aframe-event-set-component@3.0.3/dist/aframe-event-set-component.min.js"></script>
   </head>
   <body>
     <div id="loading">Iniciando AR, por favor espera...</div>
+    
+    <!-- Botón HTML real superpuesto -->
+    <button id="physicalButton" style="display: none;" onclick="window.open('https://maol.com.mx', '_blank')">¡Visítanos!</button>
     
     <a-scene
       mindar-image="imageTargetSrc: ./target.mind; filterMinCF: 0.0001; filterBeta: 0.01; warmupTolerance: 5; missTolerance: 5;"
@@ -50,10 +68,8 @@
         <a-asset-item id="bearModel" src="oso.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Cámara con cursor para interacción -->
-      <a-camera position="0 0 0" look-controls="enabled: false">
-        <a-entity cursor="fuse: false; rayOrigin: mouse;" raycaster="objects: .clickable"></a-entity>
-      </a-camera>
+      <!-- Cámara -->
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       
       <!-- Target + contenido -->
       <a-entity mindar-image-target="targetIndex: 0">
@@ -76,16 +92,12 @@
           width="2"
         ></a-text>
 
-        <!-- BOTÓN FLOTANTE -->
+        <!-- PLANO VISUAL (SOLO VISUAL, NO INTERACTIVO) -->
         <a-plane
-          id="visitButton"
           position="0 -0.6 0"
           width="1"
           height="0.3"
           color="#0066ff"
-          class="clickable"
-          event-set__mouseenter="color: #00aaff"
-          event-set__mouseleave="color: #0066ff"
         ></a-plane>
 
         <!-- TEXTO ENCIMA DEL BOTÓN -->
@@ -98,27 +110,12 @@
         ></a-text>
       </a-entity>
     </a-scene>
-
-    <!-- ENLACE REAL OCULTO -->
-    <a id="hiddenLink" href="https://maol.com.mx" target="_blank" style="display: none;">Enlace</a>
     
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const scene = document.querySelector('a-scene');
         const loading = document.getElementById('loading');
-        const visitButton = document.getElementById("visitButton");
-
-        // Evento para el botón
-        visitButton.addEventListener("click", function () {
-          console.log("Botón clickeado");
-          document.getElementById("hiddenLink").click();
-        });
-        
-        // Método alternativo para dispositivos móviles
-        visitButton.addEventListener("mousedown", function () {
-          console.log("Botón presionado");
-          document.getElementById("hiddenLink").click();
-        });
+        const physicalButton = document.getElementById('physicalButton');
 
         scene.addEventListener('loaded', function() {
           console.log("Escena cargada");
@@ -127,6 +124,8 @@
         scene.addEventListener('arReady', function() {
           console.log("AR listo");
           loading.style.display = 'none';
+          // Mostrar el botón HTML real cuando AR está listo
+          physicalButton.style.display = 'block';
         });
         
         scene.addEventListener('arError', function(event) {
@@ -140,6 +139,8 @@
             if (scene.systems['mindar-image-system']) {
               scene.systems['mindar-image-system'].start();
             }
+            // También mostrar el botón físico
+            physicalButton.style.display = 'block';
           }
         }, 3000);
       });
