@@ -1,50 +1,41 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>AR con MindAR</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
-  <style>
-    body, html { margin: 0; padding: 0; overflow: hidden; }
-    canvas { width: 100%; height: 100% }
-  </style>
-</head>
-<body>
-  <div id="ar-container"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prueba AR Rectángulo</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-three.prod.js"></script>
+    <style>
+      body, html { margin: 0; padding: 0; overflow: hidden; }
+      #ar-container { width: 100vw; height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="ar-container"></div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-        container: document.querySelector("#ar-container"),
-        imageTargetSrc: "./assets/target.mind",
-      });
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+          container: document.querySelector("#ar-container"),
+          imageTargetSrc: "./assets/target.mind",
+        });
 
-      const { renderer, scene, camera } = mindarThree;
+        const { renderer, scene, camera } = mindarThree;
 
-      const anchor = mindarThree.addAnchor(0);
+        const anchor = mindarThree.addAnchor(0);
 
-      const loader = new THREE.GLTFLoader();
+        const geometry = new THREE.PlaneGeometry(1, 0.5); // Rectángulo
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const plane = new THREE.Mesh(geometry, material);
 
-      loader.load("./assets/model.glb", (gltf) => {
-        const model = gltf.scene;
-        model.scale.set(0.5, 0.5, 0.5); // ajusta según sea necesario
-        anchor.group.add(model);
+        anchor.group.add(plane);
 
-        // animaciones
-        const mixer = new THREE.AnimationMixer(model);
-        gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
-
-        mindarThree.start();
+        await mindarThree.start();
         renderer.setAnimationLoop(() => {
-          const delta = mindarThree.clock.getDelta();
-          mixer.update(delta);
           renderer.render(scene, camera);
         });
       });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
 
