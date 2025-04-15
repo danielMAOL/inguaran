@@ -1,18 +1,78 @@
 <!DOCTYPE html>
 <html>
-  <body>
-    <h1>Prueba de cámara básica</h1>
-    <video id="video" width="400" autoplay></video>
+  <head>
+    <meta charset="utf-8">
+    <title>Preview del Oso Bailando con Three.js</title>
+    <!-- Three.js r136 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
+    <!-- GLTFLoader para cargar el modelo 3D -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/loaders/GLTFLoader.js"></script>
+  </head>
+  <body style="margin: 0;">
+    <div id="container" style="width: 100%; height: 100vh;"></div>
 
     <script>
-      // Acceder a la cámara
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-          document.getElementById("video").srcObject = stream;
-        })
-        .catch((error) => {
-          alert("Error al acceder a la cámara: " + error.message);
-        });
+      // Crear la escena y la cámara
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+      camera.position.z = 2; // Coloca la cámara a 2 metros de distancia
+
+      // Crear el renderer y añadirlo al contenedor
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.getElementById("container").appendChild(renderer.domElement);
+
+      // Añadir iluminación a la escena
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+      directionalLight.position.set(0, 1, 1);
+      scene.add(directionalLight);
+
+      // Variable para la animación
+      let mixer;
+
+      // Cargar el modelo 3D con GLTFLoader
+      const loader = new THREE.GLTFLoader();
+      loader.load(
+        "oso-bailando.glb",
+        (gltf) => {
+          // Obtener la escena del modelo
+          const model = gltf.scene;
+          // Ajustar escala para que tenga aproximadamente 40cm de alto (ajusta si es necesario)
+          model.scale.set(0.4, 0.4, 0.4);
+          // Rotar el modelo para que se vea de frente
+          model.rotation.y = Math.PI;
+          // Agregar el modelo a la escena
+          scene.add(model);
+
+          // Configurar el AnimationMixer y reproducir la animación
+          mixer = new THREE.AnimationMixer(model);
+          const action = mixer.clipAction(gltf.animations[0]);
+          action.play();
+        },
+        undefined,
+        (error) => {
+          console.error("Error cargando modelo:", error);
+        }
+      );
+
+      // Configurar el bucle de animación
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+        if (mixer) mixer.update(delta);
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // Ajustar el renderer al cambiar el tamaño de la ventana
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
     </script>
   </body>
 </html>
