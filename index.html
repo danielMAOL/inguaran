@@ -1,61 +1,18 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>AR sin Marcador</title>
-    <!-- MindAR 1.2.0 -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
-    <!-- Three.js r136 -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/loaders/GLTFLoader.js"></script>
-  </head>
-  <body style="margin: 0;">
-    <div id="ar-container" style="width: 100%; height: 100vh;"></div>
+  <body>
+    <h1>Prueba de cámara básica</h1>
+    <video id="video" width="400" autoplay></video>
 
     <script>
-      // 1. Inicializar MindAR
-      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-        container: document.getElementById("ar-container"),
-        maxTrack: 1,
-        uiLoading: "yes", // Muestra spinner de carga
-        uiScanning: "yes", // Muestra overlay de escaneo
-      });
-
-      // 2. Cargar modelo 3D
-      const start = async () => {
-        const { scene } = mindarThree;
-        const loader = new THREE.GLTFLoader();
-        
-        loader.load(
-          "oso-bailando.glb",
-          (gltf) => {
-            const model = gltf.scene;
-            model.scale.set(0.4, 0.4, 0.4);
-            model.rotation.y = Math.PI;
-
-            // Animación
-            const mixer = new THREE.AnimationMixer(model);
-            const action = mixer.clipAction(gltf.animations[0]);
-            action.play();
-
-            mindarThree.update = (delta) => {
-              mixer.update(delta);
-            };
-
-            scene.add(model);
-          },
-          undefined,
-          (error) => {
-            console.error("Error cargando modelo:", error);
-          }
-        );
-
-        // 3. Iniciar AR
-        await mindarThree.start();
-        document.body.style.backgroundColor = "transparent";
-      };
-
-      start();
+      // Acceder a la cámara
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          document.getElementById("video").srcObject = stream;
+        })
+        .catch((error) => {
+          alert("Error al acceder a la cámara: " + error.message);
+        });
     </script>
   </body>
 </html>
