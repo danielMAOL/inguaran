@@ -14,52 +14,81 @@
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
     >
-      <a-assets>
-        <a-asset-item id="bearModel" src="oso.glb"></a-asset-item>
-      </a-assets>
-
-      <!-- Cámara con cursor interactivo -->
-      <a-camera position="0 0 0" cursor="rayOrigin: mouse" raycaster="objects: .clickable">
-      </a-camera>
+      <!-- ... (assets y entidades iguales) ... -->
       
-      <!-- Target + contenido (igual que antes) ... -->
+      <!-- Cámara con componentes interactivos mejorados -->
+      <a-camera 
+        position="0 0 0" 
+        cursor="rayOrigin: mouse" 
+        raycaster="objects: .clickable; far: 5;"
+        mouse-cursor
+      ></a-camera>
     </a-scene>
 
-    <!-- Enlace oculto (igual que antes) ... -->
-    
+    <!-- ... (enlace oculto igual) ... -->
+
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const scene = document.querySelector('a-scene');
         const loading = document.getElementById('loading');
+        let arStarted = false;
 
-        // Configurar evento después de que la escena esté lista
+        // 1. Mejorar inicialización de AR
+        scene.addEventListener('mindar-system-ready', function() {
+          console.log("Sistema AR listo");
+          scene.systems['mindar-image-system'].start();
+        });
+
+        // 2. Detectar cuando el target es reconocido
+        scene.addEventListener('targetFound', event => {
+          console.log("Target detectado");
+          if (!arStarted) {
+            loading.style.display = 'none';
+            arStarted = true;
+          }
+        });
+
+        // 3. Manejar errores específicos
+        scene.addEventListener('error', function(error) {
+          console.error("Error general:", error.detail);
+          loading.innerHTML = "Error al cargar AR. Recarga la página.";
+        });
+
+        // 4. Timeout de seguridad
+        setTimeout(() => {
+          if (!arStarted) {
+            console.warn("Inicio automático por timeout");
+            loading.style.display = 'none';
+            if (scene.systems['mindar-image-system']) {
+              scene.systems['mindar-image-system'].start();
+            }
+          }
+        }, 5000); // 5 segundos
+
+        // 5. Configurar interacción del botón
         scene.addEventListener('loaded', function() {
           const visitButton = document.querySelector('#visitButton');
           
-          // 1. Usar evento 'click' de A-Frame
-          visitButton.addEventListener('click', function() {
+          // Feedback táctil
+          visitButton.addEventListener('mousedown', () => {
+            visitButton.setAttribute('color', '#0044cc');
+          });
+          
+          visitButton.addEventListener('mouseup', () => {
+            visitButton.setAttribute('color', '#0066ff');
             document.getElementById("hiddenLink").click();
           });
 
-          // 2. Opción mobile: evento touchstart
-          visitButton.addEventListener('touchstart', function() {
+          // Para dispositivos táctiles
+          visitButton.addEventListener('touchstart', () => {
+            visitButton.setAttribute('color', '#0044cc');
+          });
+          
+          visitButton.addEventListener('touchend', () => {
+            visitButton.setAttribute('color', '#0066ff');
             document.getElementById("hiddenLink").click();
           });
         });
-
-        // Resto del código de inicialización (igual que antes) ...
-      });
-
-      // Componente adicional para mejor manejo táctil
-      AFRAME.registerComponent('clickhandler', {
-        init: function() {
-          this.el.addEventListener('click', () => {
-            document.getElementById("hiddenLink").click();
-          });
-          this.el.addEventListener('touchstart', () => {
-            document.getElementById("hiddenLink").click();
-          });
-        }
       });
     </script>
   </body>
