@@ -93,15 +93,18 @@
         ></a-text>
       </a-entity>
     </a-scene>
+
+    <!-- ENLACE REAL OCULTO -->
+    <a id="hiddenLink" href="https://maol.com.mx" target="_blank" style="display: none;">Enlace</a>
     
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const scene = document.querySelector('a-scene');
         const loading = document.getElementById('loading');
 
-        // Acción al tocar el botón
+        // ✅ Acción confiable en móviles para abrir enlace
         document.getElementById("visitButton").addEventListener("click", function () {
-          window.open("https://maol.com.mx", "_blank");
+          document.getElementById("hiddenLink").click();
         });
 
         scene.addEventListener('loaded', function() {
@@ -130,4 +133,5 @@
     </script>
   </body>
 </html>
+
 
