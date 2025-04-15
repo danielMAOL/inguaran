@@ -1,7 +1,39 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <!-- ... (metadatos y estilos iguales) ... -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>AR Oso INGUARÁN - Interactivo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: fixed;
+      }
+      #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+    </style>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@3.0.3/dist/aframe-event-set-component.min.js"></script>
   </head>
   <body>
     <div id="loading">Iniciando AR, por favor espera...</div>
@@ -14,83 +46,103 @@
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
     >
-      <!-- ... (assets y entidades iguales) ... -->
+      <a-assets>
+        <a-asset-item id="bearModel" src="oso.glb"></a-asset-item>
+      </a-assets>
+
+      <!-- Cámara con cursor para interacción -->
+      <a-camera position="0 0 0" look-controls="enabled: false">
+        <a-entity cursor="fuse: false; rayOrigin: mouse;" raycaster="objects: .clickable"></a-entity>
+      </a-camera>
       
-      <!-- Cámara con componentes interactivos mejorados -->
-      <a-camera 
-        position="0 0 0" 
-        cursor="rayOrigin: mouse" 
-        raycaster="objects: .clickable; far: 5;"
-        mouse-cursor
-      ></a-camera>
+      <!-- Target + contenido -->
+      <a-entity mindar-image-target="targetIndex: 0">
+
+        <!-- OSO -->
+        <a-gltf-model
+          src="#bearModel"
+          position="0 0 0.1"
+          rotation="-50 0 -20"
+          scale="1 1 1"
+          animation-mixer
+        ></a-gltf-model>
+
+        <!-- TEXTO DE AUTORÍA -->
+        <a-text
+          value="Creado por MAOL"
+          position="0 0.8 0"
+          align="center"
+          color="#ffffff"
+          width="2"
+        ></a-text>
+
+        <!-- BOTÓN FLOTANTE -->
+        <a-plane
+          id="visitButton"
+          position="0 -0.6 0"
+          width="1"
+          height="0.3"
+          color="#0066ff"
+          class="clickable"
+          event-set__mouseenter="color: #00aaff"
+          event-set__mouseleave="color: #0066ff"
+        ></a-plane>
+
+        <!-- TEXTO ENCIMA DEL BOTÓN -->
+        <a-text
+          value="¡Visítanos!"
+          position="0 -0.6 0.01"
+          align="center"
+          color="#ffffff"
+          width="2"
+        ></a-text>
+      </a-entity>
     </a-scene>
 
-    <!-- ... (enlace oculto igual) ... -->
-
+    <!-- ENLACE REAL OCULTO -->
+    <a id="hiddenLink" href="https://maol.com.mx" target="_blank" style="display: none;">Enlace</a>
+    
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const scene = document.querySelector('a-scene');
         const loading = document.getElementById('loading');
-        let arStarted = false;
+        const visitButton = document.getElementById("visitButton");
 
-        // 1. Mejorar inicialización de AR
-        scene.addEventListener('mindar-system-ready', function() {
-          console.log("Sistema AR listo");
-          scene.systems['mindar-image-system'].start();
+        // Evento para el botón
+        visitButton.addEventListener("click", function () {
+          console.log("Botón clickeado");
+          document.getElementById("hiddenLink").click();
+        });
+        
+        // Método alternativo para dispositivos móviles
+        visitButton.addEventListener("mousedown", function () {
+          console.log("Botón presionado");
+          document.getElementById("hiddenLink").click();
         });
 
-        // 2. Detectar cuando el target es reconocido
-        scene.addEventListener('targetFound', event => {
-          console.log("Target detectado");
-          if (!arStarted) {
-            loading.style.display = 'none';
-            arStarted = true;
-          }
+        scene.addEventListener('loaded', function() {
+          console.log("Escena cargada");
         });
-
-        // 3. Manejar errores específicos
-        scene.addEventListener('error', function(error) {
-          console.error("Error general:", error.detail);
-          loading.innerHTML = "Error al cargar AR. Recarga la página.";
+        
+        scene.addEventListener('arReady', function() {
+          console.log("AR listo");
+          loading.style.display = 'none';
         });
-
-        // 4. Timeout de seguridad
-        setTimeout(() => {
-          if (!arStarted) {
-            console.warn("Inicio automático por timeout");
+        
+        scene.addEventListener('arError', function(event) {
+          console.error("Error AR:", event.detail);
+        });
+        
+        setTimeout(function() {
+          if (loading.style.display !== 'none') {
+            console.log("Forzando inicio de AR...");
             loading.style.display = 'none';
             if (scene.systems['mindar-image-system']) {
               scene.systems['mindar-image-system'].start();
             }
           }
-        }, 5000); // 5 segundos
-
-        // 5. Configurar interacción del botón
-        scene.addEventListener('loaded', function() {
-          const visitButton = document.querySelector('#visitButton');
-          
-          // Feedback táctil
-          visitButton.addEventListener('mousedown', () => {
-            visitButton.setAttribute('color', '#0044cc');
-          });
-          
-          visitButton.addEventListener('mouseup', () => {
-            visitButton.setAttribute('color', '#0066ff');
-            document.getElementById("hiddenLink").click();
-          });
-
-          // Para dispositivos táctiles
-          visitButton.addEventListener('touchstart', () => {
-            visitButton.setAttribute('color', '#0044cc');
-          });
-          
-          visitButton.addEventListener('touchend', () => {
-            visitButton.setAttribute('color', '#0066ff');
-            document.getElementById("hiddenLink").click();
-          });
-        });
+        }, 3000);
       });
     </script>
   </body>
 </html>
-
