@@ -2,39 +2,69 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>MindAR con lona.mind</title>
+    <title>AR Funcional con Oso Bailarín</title>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/loaders/GLTFLoader.js"></script>
     <style>
-      body, html { margin: 0; padding: 0; overflow: hidden; }
-      #ar-container { width: 100%; height: 100vh; }
+      body, html { 
+        margin: 0; 
+        padding: 0; 
+        overflow: hidden; 
+        width: 100%;
+        height: 100%;
+      }
+      #ar-container {
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+      #loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-family: Arial;
+        z-index: 1000;
+      }
     </style>
   </head>
   <body>
+    <div id="loading">Cargando experiencia AR...</div>
     <div id="ar-container"></div>
 
     <script>
-      // 1. Inicializar MindAR
+      // 1. Configuración inicial de MindAR
       const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-        container: document.getElementById("ar-container"),
-        imageTargetSrc: "lona.mind",
+        container: document.querySelector('#ar-container'),
+        imageTargetSrc: 'lona.mind',
         maxTrack: 1,
-        uiLoading: "yes",
-        uiScanning: "yes",
-        capture: { facingMode: { ideal: "environment" } }, // Mejor compatibilidad
+        uiScanning: 'yes',
+        uiLoading: 'no', // Usamos nuestro propio loader
       });
 
       const { renderer, scene, camera } = mindarThree;
-      let mixer = null; // Variable para controlar animaciones
+      let mixer = null;
 
-      // 2. Cargar modelo 3D
-      new THREE.GLTFLoader().load(
-        "oso-bailando.glb",
+      // 2. Configurar cámara y renderer
+      camera.far = 100; // Aumentar distancia de renderizado
+      renderer.setClearColor(0x000000, 0); // Fondo transparente
+      renderer.autoClear = false;
+
+      // 3. Cargar modelo 3D con ajustes de escala
+      const loader = new THREE.GLTFLoader();
+      loader.load(
+        'oso-bailando.glb',
         (gltf) => {
           const model = gltf.scene;
-          model.scale.set(0.4, 0.4, 0.4);
-          model.rotation.y = Math.PI;
+          
+          // Ajustes críticos de escala y posición
+          model.scale.set(0.1, 0.1, 0.1); // Reducido a 10% del tamaño original
+          model.position.set(0, -0.5, 0); // Bajar posición en Y
+          model.rotation.y = Math.PI; // Rotación 180 grados
 
           // Configurar animaciones
           mixer = new THREE.AnimationMixer(model);
@@ -42,40 +72,57 @@
             mixer.clipAction(gltf.animations[0]).play();
           }
 
-          // 3. Vincular al marcador
+          // Crear grupo contenedor para mejor control
+          const modelGroup = new THREE.Group();
+          modelGroup.add(model);
+
+          // Vincular al marcador
           const anchor = mindarThree.addAnchor(0);
-          anchor.group.add(model);
+          anchor.group.add(modelGroup);
+
+          document.getElementById('loading').style.display = 'none';
         },
-        undefined,
+        (xhr) => {
+          console.log((xhr.loaded / xhr.total * 100) + '% cargado');
+        },
         (error) => {
-          console.error("Error cargando modelo:", error);
-          alert("Error al cargar el modelo 3D. Verifica la consola.");
+          console.error('Error:', error);
+          alert('Error al cargar el modelo 3D');
         }
       );
 
       // 4. Configurar actualización de animaciones
-      mindarThree.update = (delta) => {
-        if (mixer) mixer.update(delta / 1000); // Conversión a segundos
+      const clock = new THREE.Clock();
+      mindarThree.update = () => {
+        const delta = clock.getDelta();
+        if (mixer) mixer.update(delta);
       };
 
-      // 5. Iniciar AR con manejo de errores
+      // 5. Iniciar AR con controles de error
       async function startAR() {
         try {
           await mindarThree.start();
           renderer.setAnimationLoop(() => {
             renderer.render(scene, camera);
           });
+          
+          // Añadir luz ambiental para mejor visualización
+          const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+          scene.add(ambientLight);
+          
+          // Debug: Añadir ejes coordenados
+          // scene.add(new THREE.AxesHelper(1));
         } catch (err) {
-          console.error("Error al iniciar AR:", err);
-          alert("No se pudo iniciar la experiencia AR. ¿Tienemos acceso a la cámara?");
+          console.error('Error AR:', err);
+          alert('Error al acceder a la cámara: ' + err.message);
         }
       }
-      
-      // Verificar compatibilidad antes de iniciar
+
+      // Verificar compatibilidad
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         startAR();
       } else {
-        alert("Tu navegador no soporta funciones AR necesarias.");
+        alert('Tu dispositivo no soporta AR');
       }
     </script>
   </body>
