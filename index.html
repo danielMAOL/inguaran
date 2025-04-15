@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Oso animado</title>
+  <title>Oso centrado</title>
   <style>
     body { margin: 0; overflow: hidden; }
     canvas { display: block; }
@@ -11,29 +11,27 @@
   <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
 </head>
 <body>
-  <a-scene background="color: #f0f0f0">
+  <a-scene background="color: #ffffff">
     <a-assets>
       <a-asset-item id="oso" src="oso.glb"></a-asset-item>
     </a-assets>
 
-    <!-- Oso centrado y más grande -->
+    <!-- Oso pequeño y centrado -->
     <a-entity 
       gltf-model="#oso" 
-      position="0 0.2 -1" 
+      position="0 1.5 -2" 
       rotation="0 180 0" 
-      scale="2 2 2" 
+      scale="0.5 0.5 0.5" 
       animation-mixer>
     </a-entity>
 
-    <!-- Cámara centrada -->
+    <!-- Cámara -->
     <a-entity camera position="0 1.6 0"></a-entity>
 
-    <!-- Luz suave y clara -->
-    <a-light type="ambient" intensity="1.2"></a-light>
-    <a-light type="directional" intensity="0.8" position="1 2 1"></a-light>
-
-    <!-- Piso claro -->
-    <a-plane rotation="-90 0 0" width="10" height="10" color="#e0e0e0" shadow></a-plane>
+    <!-- Luz -->
+    <a-light type="ambient" intensity="1.5"></a-light>
+    <a-light type="directional" intensity="1" position="0 2 2"></a-light>
   </a-scene>
 </body>
 </html>
+
